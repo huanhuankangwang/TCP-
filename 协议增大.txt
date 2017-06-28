@@ -1,0 +1,114 @@
+在config中开启这个宏
+#define     USE_BIG_PACKET
+
+PACKET_DATA_LEN 这个宏 被定义为  512
+这个宏 会将结构体 变成：
+typedef struct packet_t{
+	unsigned char  packet_head;
+	unsigned short left_packet_num;
+	unsigned short packet_num;
+	unsigned char  packet_type;
+	unsigned short packet_data_len;
+	unsigned char  data[PACKET_DATA_LEN];
+	unsigned char  check_sum;
+}T_Packet,*PT_Packet;
+
+其实我们协议就这样做处理，但是由于网络传输中字节序问题：
+所以我们要讲unsigned short对应的变量发送时进行字节序转换
+
+但是因为还有校验所以规定：字节序转换前进行校验。
+
+接收时：	
+	将unsigned short进行字节序转换 后进行校验
+发送时：
+	先进行校验，然后进行字节转换
+
+如下所示：
+发送：
+int _send_packet(PT_Packet  packet)
+{
+	int ret,retry = RETRY_TIMES;
+
+	packet->left_packet_num= htons(packet->left_packet_num);
+	packet->packet_num= htons(packet->packet_num);
+	packet->packet_data_len = htons(packet->packet_data_len);
+	//printf(" send data len =%d \r\n",packet->packet_data_len);
+
+send_again:
+	ret = client_tcp_send((unsigned char*)packet , sizeof(T_Packet));
+	if(ret < 0)
+		return ret;
+	else
+	if(ret == sizeof(T_Packet))
+		return 1;
+
+	if(retry > 0)
+	{
+		retry--;
+		goto send_again;
+	}else{
+		
+		return 0;//发送失败
+	}
+
+	//ack 1
+	return 1;
+}
+
+接收：
+int _receive_Onepacket(PT_Packet packet)
+{
+	int ret =0,retry = RETRY_TIMES;
+	unsigned char  head =0;
+	unsigned char *ppacket = (unsigned char*)packet;
+	ppacket = ppacket + sizeof(head);
+read_head:
+	ret = client_tcp_recv((unsigned char*)(&head),sizeof(head));
+	if(ret <= 0)
+		return ret;
+
+	//printf("head =%d\r\n",head);
+	if(ret != sizeof(head)){
+		//printf("not head\r\n");
+		return 0;
+	}
+	
+	if(!isPacketHead(&head)){
+		//printf("not head\r\n");
+		goto read_head;
+	}
+
+	packet->packet_head = head;
+again:
+	ret = client_tcp_recv(ppacket,sizeof(T_Packet)-sizeof(head));
+
+	//printf("len ret =%d sizeof(T_Packet) =%d\r\n",ret,sizeof(T_Packet));
+	if(ret < 0)
+	{
+		return -1;
+	}
+	
+	if(ret != sizeof(T_Packet) - sizeof(head)){
+		//printf("not equal\r\n");
+		return 0;
+	}
+
+	packet->packet_num= ntohs(packet->packet_num);
+	packet->left_packet_num= ntohs(packet->left_packet_num);
+
+	packet->packet_data_len = ntohs(packet->packet_data_len);
+	//printf(" recv data len =%d num=%d left=%d\r\n",packet->packet_data_len,packet->packet_num,packet->left_packet_num);
+
+
+
+#if 1
+	if( _checkSum(packet) != 1 ){
+		if(retry){
+			retry--;
+			goto again;
+		}else
+			return 0;
+	}
+#endif
+	return 1;
+}
