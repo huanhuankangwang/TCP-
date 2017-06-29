@@ -52,41 +52,43 @@ int closefile(int fd)
 
 int read_fd(int fd,const char *buf,int maxsize)
 {
-	int len;
-	int ret = 0;
+	int ret = 0,len =0;
 
-	do{
-		len = read(fd,buf,maxsize);//¶Á³ö
-		if(len < 0)
-		{
-			return -1;
-		}if(len == 0)
-			break;
-		buf += len;
-		maxsize -= len;
-		ret += len;
-	}while(maxsize > 0);
+    while(maxsize > 0)
+    {
+        ret = read(fd,buf,maxsize);
+        if(ret <=0)
+        {
+            printf("read fd=%d reason: %s\r\n",fd,strerror(errno));
+            break;
+        }
 
-	return ret;
+        buf += ret;
+        maxsize -= ret;
+        len += ret;
+    }
+
+	return len;
 }
 
 int write_fd(int fd,const char *buf,int size)
 {
-	int len;
-	int ret = 0;
-	do{
-		len = write(fd,buf,size);
-		if(len <= 0)
-		{
-			
-			return -1;
+    int ret = 0,len =0;
+
+	while(size > 0)
+    {
+		ret = write(fd,buf,size);
+		if(ret <= 0)
+        {
+            printf("write fd=%d reason: %s\r\n",fd,strerror(errno));
+            break;
 		}
-		buf += len;
-		size -= len;
-		ret += len;
+		buf += ret;
+		size -= ret;
+		len += ret;
 	}while(size > 0);
 
-	return ret;
+	return len;
 }
 
 int mkdirs(const char *dir)
