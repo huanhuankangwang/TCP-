@@ -11,4 +11,4 @@ testapp:$(OBJS)
 	$(CC) -o $@  $^ $(OBJ) $(CFLAGS)
 
 clean:
-	rm *.o -rf
+	rm *.o testapp -rf

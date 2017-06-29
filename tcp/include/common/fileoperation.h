@@ -23,4 +23,7 @@ int write_fd(int fd,const char *buf,int size);
 int read_line(int fd,const char *buf,int maxsize);
 
 int create_file(const char *filename);
+
+long getFileSize(int fd);
+long getCurPos(int fd);
 #endif//_FILE_OPERATION_H_

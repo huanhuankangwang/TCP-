@@ -4,6 +4,13 @@
 #include <ringbuffer.h>
 #include <pthread.h>
 
+#define      END_OF_FILE        1
+#define      NO_END_OF_FILE     0
+
+
+#define      RUNNING            1
+#define      NOT_RUNNING        0
+
 typedef struct _fileReader
 {
 	PT_RingBuffer  ringbuf;
@@ -13,6 +20,8 @@ typedef struct _fileReader
 	pthread_mutex_t mutex;
 	pthread_cond_t  cond;
 	pthread_t		pid;
+
+    int         flag;//¶ÁÈ¡²Ù×÷
 }T_FileReader,*PT_FileReader;
 
 
@@ -32,5 +41,5 @@ int closeFileReader(PT_FileReader filereader);
 */
 int readFileReader(PT_FileReader reader,char *str,int maxsize);
 
-
+int isEof(PT_FileReader reader);
 #endif//_FILE_READER_H_

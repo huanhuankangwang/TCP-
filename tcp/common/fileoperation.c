@@ -21,18 +21,29 @@ long fileSize(const char *path)
 	return size;  
 }  
 
+#define   FLAGS         (S_IRWXG|S_IRWXO | S_IRWXU)
 
 int create_file(const char *filename)
 {
 	int fd;
-	fd = openfile(filename,O_CREAT);
-	if(fd <0)
-	{
-		return 1;
-	}
+	//fd = openfile(filename,O_CREAT);
+	umask(0);
+    fd = creat(filename,0777);
+    if (0 > fd)  
+    {
+        printf("errno:%s\n",strerror(errno));
+        return -1;
+    }  
+    else  
+    {  
+        close(fd);
+    }  
+
 
 	return 0;
 }
+
+
 
 int openfile(const char *filename,int mode)
 {
@@ -156,6 +167,21 @@ int read_line(int fd,const char *buf,int maxsize)
 	}
 
 	return len;
+}
+
+long getFileSize(int fd)
+{
+    long  size;
+
+    size = lseek(fd,0L,SEEK_END);  
+    lseek(fd,0L,SEEK_SET);  
+
+    return size;
+}
+
+long getCurPos(int fd)
+{
+   return lseek(fd,0L,SEEK_SET);
 }
 
 

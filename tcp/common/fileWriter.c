@@ -17,7 +17,7 @@ void *do_write_thread(void*arg)
 	    memset(tmp,0,sizeof(tmp));
 
         pthread_mutex_lock(&writer->mutex);
-        ret = readFileWriter(writer,tmp,sizeof(1024));//读不到会阻塞在这里
+        ret = readFileWriter(writer,tmp,sizeof(tmp));//读不到会阻塞在这里
 
         len = ret;
         ret = write_fd(writer->fd,tmp,len);
