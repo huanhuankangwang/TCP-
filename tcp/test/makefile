@@ -7,8 +7,19 @@
 OBJ:= ../common/common.a
 OBJS:= filetest.o
 
+
+TARGET:= testapp writertest ringbuffer_test
+
+all:$(TARGET)
+
 testapp:$(OBJS)
 	$(CC) -o $@  $^ $(OBJ) $(CFLAGS)
 
+writertest:writertest.o
+	$(CC) -o $@  $^ $(OBJ) $(CFLAGS)
+
+ringbuffer_test:ringbuffer_test.o
+	$(CC) -o $@  $^ $(OBJ) $(CFLAGS)
+
 clean:
-	rm *.o testapp -rf
+	rm *.o $(TARGET) -rf

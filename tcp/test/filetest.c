@@ -1,13 +1,13 @@
 #include <fileReader.h>
 #include <fileWriter.h>
 
-#define   readfile  "0.jpg"
-#define   outfile   "1.jpg"
+#define   readfile  "makefile"
+#define   outfile   "temp"
 
-#define  BUFFSIZE   (1024*10)
+#define  BUFFSIZE   (1024*20)
 
 #define    USING_READER         1
-#define    USING_WRITE          0
+#define    USING_WRITE          1
 
 int main()
 {
@@ -54,7 +54,7 @@ quit:
     closeFileWriter(writer);
 #endif
 
-#endif 
+#endif
 
     printf("all commplete\r\n");
     return 0;

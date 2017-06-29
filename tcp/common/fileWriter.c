@@ -7,18 +7,23 @@
 
 #include <fileWriter.h>
 
+#define    FILE_WRITER_DEBUG(...)
+
 void *do_write_thread(void*arg)
 {
     int  ret = 0,len;
-	char tmp[1024];
-	PT_FileWriter writer = (PT_FileWriter)arg;
+	char tmp[1023];
+	PT_FileWriter writer = (PT_FileWriter)arg;	
+	printf("readFileWriter mWritePos=%d\r\n",writer->ringbuf->mWritePos);
 	do
 	{
 	    memset(tmp,0,sizeof(tmp));
+		printf("lock readFileWriter mWritePos=%d\r\n",writer->ringbuf->mWritePos);
 
         pthread_mutex_lock(&writer->mutex);
+		printf("do_write_thread lock readFileWriter mWritePos=%d\r\n",writer->ringbuf->mWritePos);
         ret = readFileWriter(writer,tmp,sizeof(tmp));//读不到会阻塞在这里
-
+		printf("do_write_thread ret =%d\r\n",ret);
         len = ret;
         ret = write_fd(writer->fd,tmp,len);
         if(ret != len)
@@ -27,9 +32,7 @@ void *do_write_thread(void*arg)
         }
         
         pthread_mutex_unlock(&writer->mutex);
-
-        usleep(1);
-			
+		printf("do_write_thread unlock readFileWriter \r\n");	
 	}while(writer->isRunning);
 
     writer->isRunning = -1;//成功退出
@@ -116,12 +119,15 @@ int readFileWriter(PT_FileWriter writer,char *str,int maxsize)
 
     while(size > 0)
     {
+       printf("readFileWriter readString mWritePos=%d\r\n",writer->ringbuf->mWritePos);
        ret = readString(writer->ringbuf,str,size);
        if(ret <= 0)
        {
+       	   printf("readFileWriter wait for data\r\n");
            //阻塞在这里
            pthread_cond_wait(&writer->cond,&writer->mutex);
        }
+	   printf("readFileWriter wait for data ret =%d\r\n",ret);
        size  -= ret;
        str  += ret;
     }
@@ -133,11 +139,20 @@ int readFileWriter(PT_FileWriter writer,char *str,int maxsize)
 int writeFileWriter(PT_FileWriter writer,char *str,int len)
 {
     int  ret = 0,size = len;
-    
+	PT_RingBuffer ringbuf =writer->ringbuf;
+
+	printf("write locked1 \r\n");
+	printf("mWritePos =%d mReadPos =%d\r\n",ringbuf->mWritePos,ringbuf->mReadPos);
     pthread_mutex_lock(&writer->mutex);
+	printf("write locked2 \r\n");
+	printf("mWritePos =%d mReadPos =%d\r\n",ringbuf->mWritePos,ringbuf->mReadPos);
+	printf("write locked2  str=%s  len=%d\r\n",str,len);
     while(size > 0)
     {
+      
+	   printf("mWritePos =%d mReadPos =%d\r\n",ringbuf->mWritePos,ringbuf->mReadPos);
        ret = writeString(writer->ringbuf,str,size);
+	   printf("write str ret =%d\r\n",ret);
        if(ret <= 0)
        {
           break;
@@ -146,7 +161,7 @@ int writeFileWriter(PT_FileWriter writer,char *str,int len)
        str  += ret;
     }
     len -= size;
-    if(len)
+    if(len > 0)
     {
         //写入后唤醒 线程进行读，然后写入到文件中
         pthread_cond_signal(&writer->cond);

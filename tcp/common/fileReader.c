@@ -18,20 +18,20 @@ void *do_read_thread(void*arg)
 	{
 	    memset(tmp,0,sizeof(tmp));
         pthread_mutex_lock(&reader->mutex);
-        printf("lock in do_read_thread\r\n");
+        FILE_READER_DEBUG("lock in do_read_thread\r\n");
 		ret = read_fd(reader->fd,tmp,sizeof(tmp));
         if(ret <= 0)
         {
-            printf("commpeter read \r\n");
+            FILE_READER_DEBUG("commpeter read \r\n");
             reader->flag = END_OF_FILE;
             pthread_mutex_unlock(&reader->mutex);
             break;
         }
 
-        printf("reader read file size =%d\r\n",ret);
+        FILE_READER_DEBUG("reader read file size =%d\r\n",ret);
         writeFileReader(reader,tmp,ret);
 
-        printf("unlock in do_read_thread\r\n");
+        FILE_READER_DEBUG("unlock in do_read_thread\r\n");
         pthread_mutex_unlock(&reader->mutex);
 			
 	}while(reader->isRunning);
@@ -104,7 +104,7 @@ int closeFileReader(PT_FileReader reader)
         pthread_cond_signal(&reader->cond);
         pthread_mutex_unlock(&reader->mutex);
 
-        printf("wait for exit %d\r\n",reader->isRunning);
+        FILE_READER_DEBUG("wait for exit %d\r\n",reader->isRunning);
 
         //pthread_kill(tid, SIGTERM); //强制杀死
         while(reader->isRunning == RUNNING)
@@ -121,7 +121,7 @@ int closeFileReader(PT_FileReader reader)
 		reader = NULL;
 	}
 
-    printf("closeFileReader\r\n");
+    FILE_READER_DEBUG("closeFileReader\r\n");
 	return 0;
 }
 
@@ -161,7 +161,7 @@ int writeFileReader(PT_FileReader reader,char *str,int len)
        ret = writeString(reader->ringbuf,str,size);
        if(ret <= 0)
        {
-          printf("wait reader\r\n");
+          FILE_READER_DEBUG("wait reader\r\n");
           pthread_cond_wait(&reader->cond,&reader->mutex);
           //当环形缓冲区为满 时 阻塞在这里
        }
