@@ -7,7 +7,7 @@
 	********************ringbuffer*******************
 	
 */
-
+#pragma pack(4)
 typedef struct _ringBuffer{
 	unsigned char  *mBuf;
 	int     mLen;
@@ -15,7 +15,7 @@ typedef struct _ringBuffer{
 	int  	mWritePos;
 	pthread_mutex_t mMutex;
 }T_RingBuffer,*PT_RingBuffer;
-
+#pragma pack() 
 
 PT_RingBuffer mallocRingBuffer(int len);
 int		freeRingBuffer(PT_RingBuffer ringbuf);

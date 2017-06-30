@@ -8,9 +8,6 @@
 #define      NO_END_OF_FILE     0
 
 
-#define      RUNNING            1
-#define      NOT_RUNNING        0
-
 typedef struct _fileReader
 {
 	PT_RingBuffer  ringbuf;

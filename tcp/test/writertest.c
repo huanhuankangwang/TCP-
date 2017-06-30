@@ -11,7 +11,7 @@
 int main()
 {
     int ret;
-    char  tmp[1024]={"wangkangwangkang\r\n"};
+    char  tmp[200]={"wangkangwangkang\r\n this my test \r\n"};
     PT_FileWriter writer = NULL;
 
     if( create_file(outfile))
@@ -26,7 +26,7 @@ int main()
     printf("main  do while Wpos =%d Rpos =%d\r\n",writer->ringbuf->mWritePos,writer->ringbuf->mReadPos);
     do{
 
-#if 0
+#if 01
 	   printf("mWritePos =%d mReadPos =%d\r\n",writer->ringbuf->mWritePos,writer->ringbuf->mReadPos);
        ret = writeFileWriter(writer,tmp,sizeof(tmp));
 	   if(ret == sizeof(tmp))

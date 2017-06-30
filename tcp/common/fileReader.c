@@ -7,6 +7,9 @@
 #include <string.h>
 #include <fileReader.h>
 
+#define      RUNNING            1
+#define      NOT_RUNNING        0
+
 #define   FILE_READER_DEBUG(...)
 
 void *do_read_thread(void*arg)
