@@ -9,13 +9,16 @@
 
 #define    FILE_WRITER_DEBUG(...)
 
-#define      RUNNING            1
-#define      NOT_RUNNING        0
+#define      RUNNING             1
+#define      NOT_RUNNING         0
 #define      RUNNING_QUIT       -1
 
+#define      WRITE_FAILED        1
+#define      WRITE_SUCCESS		 0
 
-#define    IS_RUNNING(arg)   (arg == RUNNING)
 
+#define    IS_RUNNING(arg)   		(arg->isRunning == RUNNING)
+#define    IS_WRITE_SUCCESS(arg)	(arg->flag == WRITE_SUCCESS)
 
 //最小的环形缓冲区大小
 #define     MIN_BUFFSIZE        (1024*2)
@@ -35,16 +38,17 @@ void *do_write_thread(void*arg)
         pthread_mutex_lock(&writer->mutex);
 		FILE_WRITER_DEBUG("do_write_thread lock readFileWriter mWritePos=%d\r\n",writer->ringbuf->mWritePos);
         ret = readFileWriter(writer,tmp,sizeof(tmp));//读不到会阻塞在这里
-		printf("do_write_thread ret =%d isRunn\r\n",ret,writer->isRunning);
+		FILE_WRITER_DEBUG("do_write_thread ret =%d isRunn\r\n",ret,writer->isRunning);
         len = ret;
         ret = write_fd(writer->fd,tmp,len);
         if(ret != len)
         {
+        	writer->flag = WRITE_FAILED;
             break;
         }
         
         pthread_mutex_unlock(&writer->mutex);
-		printf("do_write_thread unlock readFileWriter \r\n");	
+		FILE_WRITER_DEBUG("do_write_thread unlock readFileWriter \r\n");	
 	}while(writer->isRunning);
 
     writer->isRunning = RUNNING_QUIT;//成功退出
@@ -87,6 +91,7 @@ PT_FileWriter openFileWriter(const char* filename,int bufSize)
 		pthread_mutex_init(&writer->mutex, NULL);
 		pthread_cond_init(&writer->cond,NULL);
 		writer->isRunning  = RUNNING;
+		writer->flag	   = WRITE_SUCCESS;
 
 		ret = pthread_create(&writer->pid,NULL,do_write_thread,(void*)writer);
 	    if(ret!=0)  
@@ -135,17 +140,17 @@ int readFileWriter(PT_FileWriter writer,char *str,int maxsize)
 
     while(size > 0)
     {
-       printf("readFileWriter readString mWritePos=%d\r\n",writer->ringbuf->mWritePos);
+       FILE_WRITER_DEBUG("readFileWriter readString mWritePos=%d\r\n",writer->ringbuf->mWritePos);
        ret = readString(writer->ringbuf,str,size);
        if(ret <= 0)
        {
-       	   printf("readFileWriter wait for data\r\n");
+       	   FILE_WRITER_DEBUG("readFileWriter wait for data\r\n");
            //阻塞在这里
            pthread_cond_wait(&writer->cond,&writer->mutex);
-           if(!IS_RUNNING(writer->isRunning))
+           if(!IS_RUNNING(writer))
              break;
        }
-	   printf("readFileWriter wait for data ret =%d\r\n",ret);
+	   FILE_WRITER_DEBUG("readFileWriter wait for data ret =%d\r\n",ret);
        size  -= ret;
        str  += ret;
     }
@@ -165,7 +170,11 @@ int writeFileWriter(PT_FileWriter writer,char *str,int len)
        ret = writeString(writer->ringbuf,str,size);
 	   if(ret <= 0)
        {
-          break;
+       	  if(!IS_WRITE_SUCCESS(writer))
+		  {
+		  	pthread_mutex_unlock(&writer->mutex);
+			return -1;
+       	  }
        }
        size  -= ret;
        str  += ret;

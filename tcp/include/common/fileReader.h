@@ -12,13 +12,12 @@ typedef struct _fileReader
 {
 	PT_RingBuffer  ringbuf;
 	int            fd;//文件句柄
-
 	int  		   isRunning;
+	int         flag;//读取操作
+
 	pthread_mutex_t mutex;
 	pthread_cond_t  cond;
 	pthread_t		pid;
-
-    int         flag;//读取操作
 }T_FileReader,*PT_FileReader;
 
 
@@ -34,9 +33,9 @@ int closeFileReader(PT_FileReader filereader);
 /*
     **********************************************************
     返回值  >0  实际读取文件数
-            <0  文件结束/没有内容可读
+            <0  文件结束
+            =0  /没有内容可读
 */
 int readFileReader(PT_FileReader reader,char *str,int maxsize);
 
-int isEof(PT_FileReader reader);
 #endif//_FILE_READER_H_

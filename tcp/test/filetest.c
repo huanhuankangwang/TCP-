@@ -7,7 +7,7 @@
 #define  BUFFSIZE   (1024*20)
 
 #define    USING_READER         1
-#define    USING_WRITE          0
+#define    USING_WRITE          1
 
 int main()
 {
@@ -35,18 +35,20 @@ int main()
     printf("main  do while\r\n");
     do{
        ret = readFileReader(reader,tmp,sizeof(tmp));
-       if(ret <=  0)
+       if(ret <  0)
        {
-         if(isEof(reader))
+         //if(isEof(reader))
             break;
-       }
+       }else if(ret == 0){
+			continue;
+	   }
 
        printf("read len =%d\r\n",ret);
 #if (USING_WRITE)
        writeFileWriter(writer,tmp,ret);
 #endif        
     }while(1);
-   
+
 quit:
     printf("will quit \r\n");
     closeFileReader(reader);

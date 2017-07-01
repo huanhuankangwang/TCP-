@@ -9,13 +9,22 @@
 
 #define      RUNNING            1
 #define      NOT_RUNNING        0
+#define      RUNNING_QUIT		-1
 
 #define   FILE_READER_DEBUG(...)
+//#define   FILE_READER_DEBUG  printf
+
+#define   isRunning(reader)	(reader->isRunning == RUNNING)
+#define   isEof(reader)		(reader->flag == END_OF_FILE)
+
+#define   IS_EMPTY(reader)  (reader->ringbuf->mReadPos == reader->ringbuf->mWritePos)
+
 
 void *do_read_thread(void*arg)
 {
     int  ret = 0,len;
 	char tmp[1024];
+	char *pbuf = NULL;
 	PT_FileReader reader = (PT_FileReader)arg;
 	do
 	{
@@ -25,22 +34,38 @@ void *do_read_thread(void*arg)
 		ret = read_fd(reader->fd,tmp,sizeof(tmp));
         if(ret <= 0)
         {
-            FILE_READER_DEBUG("commpeter read \r\n");
+            printf("commpeter read \r\n");
             reader->flag = END_OF_FILE;
             pthread_mutex_unlock(&reader->mutex);
             break;
         }
 
-        FILE_READER_DEBUG("reader read file size =%d\r\n",ret);
-        writeFileReader(reader,tmp,ret);
+		len  = ret;
+		pbuf = tmp;
+		while(len >0)
+		{
+			ret = writeString(reader->ringbuf,pbuf,len);
+			if(ret <= 0)
+			{
+				//等待
+				pthread_cond_wait(&reader->cond,&reader->mutex);
+				usleep(20);
+			}
 
-        FILE_READER_DEBUG("unlock in do_read_thread\r\n");
+			pbuf += ret;
+			len  -= ret;
+		}
+ 		
         pthread_mutex_unlock(&reader->mutex);
 			
-	}while(reader->isRunning);
+	}while(reader->isRunning == RUNNING);
 
+	FILE_READER_DEBUG("exit do_read_thread isRunning= %d %d\r\n",reader->isRunning,reader->flag);
     reader->flag = END_OF_FILE;
-    reader->isRunning = NOT_RUNNING;//成功退出
+    reader->isRunning = RUNNING_QUIT;//成功退出
+	FILE_READER_DEBUG("exit do_read_thread isRunning= %d %d\r\n",reader->isRunning,reader->flag);
+
+	return NULL;
 }
 
 PT_FileReader openFileReader(const char* filename,int bufSize)
@@ -101,26 +126,28 @@ int closeFileReader(PT_FileReader reader)
 {
 	if(reader)
 	{
-		reader->isRunning = 0;
-        
-        pthread_mutex_lock(&reader->mutex);
-        pthread_cond_signal(&reader->cond);
-        pthread_mutex_unlock(&reader->mutex);
+		FILE_READER_DEBUG("wait for exit %d\r\n",reader->isRunning);
 
-        FILE_READER_DEBUG("wait for exit %d\r\n",reader->isRunning);
+		if(!isEof(reader))
+		{
+        	pthread_mutex_lock(&reader->mutex);
+        	pthread_cond_signal(&reader->cond);
+        	pthread_mutex_unlock(&reader->mutex);
+		}else{
+			reader->isRunning = NOT_RUNNING;
+			while(reader->isRunning == RUNNING_QUIT)
+	        {
+	            printf(" running =%d flag = %d ",reader->isRunning,reader->flag);
+	            usleep(200);
+	        }//等待退出成功
+		}
 
         //pthread_kill(tid, SIGTERM); //强制杀死
-        while(reader->isRunning == RUNNING)
-        {
-            printf(" running =%d flag = %d ",reader->isRunning,reader->flag);
-            sleep(1);
-        }//等待退出成功
-
         pthread_cond_destroy(&reader->cond);
 		closefile(reader->fd);
 		freeRingBuffer(reader->ringbuf);
 		reader->ringbuf = NULL;
-		free(reader);
+		//free(reader);
 		reader = NULL;
 	}
 
@@ -132,20 +159,25 @@ int readFileReader(PT_FileReader reader,char *str,int maxsize)
 {
 	int  ret = 0,size = maxsize;
 
-    pthread_mutex_lock(&reader->mutex);
     FILE_READER_DEBUG("lock in readFileReader\r\n");
+	pthread_mutex_lock(&reader->mutex);
 
-    do
+    while(size > 0)
     {
        ret = readString(reader->ringbuf,str,size);
        if(ret <= 0)
        {
            FILE_READER_DEBUG("in readFileReader ret = %d running =%d flag = %d \r\n",ret,reader->isRunning,reader->flag);
-           break;
+		   if(isEof(reader) && (maxsize-size <= 0) )
+		   {
+		   		return -1;//是文件结束，并且是不在运行
+		   }
+		   
+		   break;
        }
        size  -= ret;
        str  += ret;
-    }while(size > 0);
+    }
 
     
     pthread_cond_signal(&reader->cond);
@@ -153,30 +185,5 @@ int readFileReader(PT_FileReader reader,char *str,int maxsize)
     pthread_mutex_unlock(&reader->mutex);
 
     return maxsize -size;
-}
-
-//不对外部开放的接口
-int writeFileReader(PT_FileReader reader,char *str,int len)
-{
-    int  ret = 0,size = len;
-    do
-    {
-       ret = writeString(reader->ringbuf,str,size);
-       if(ret <= 0)
-       {
-          FILE_READER_DEBUG("wait reader\r\n");
-          pthread_cond_wait(&reader->cond,&reader->mutex);
-          //当环形缓冲区为满 时 阻塞在这里
-       }
-       size  -= ret;
-       str  += ret;
-    }while(size > 0);
-
-    return len;
-}
-
-int isEof(PT_FileReader reader)
-{
-    return (reader->flag == END_OF_FILE);
 }
 

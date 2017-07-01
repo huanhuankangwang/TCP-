@@ -4,11 +4,16 @@
 
 #include <ringbuffer.h>
 
+
+#define    MIN_SIZE_RINGBUF    (1024)
+
 #define     RINGBUF_DEBUG(...)
 //#define       RINGBUF_DEBUG  printf
 
 PT_RingBuffer mallocRingBuffer(int len)
 {
+	if(len < MIN_SIZE_RINGBUF)
+		len = MIN_SIZE_RINGBUF;
 	PT_RingBuffer buf = malloc(sizeof(T_RingBuffer));
 
 	do
@@ -59,10 +64,10 @@ int isFull(PT_RingBuffer ringbuf)
 
 int isEmpty(PT_RingBuffer ringbuf)
 {
-	int ret = 1;
+	int ret = 0;
 	if(ringbuf->mReadPos == ringbuf->mWritePos)
 	{
-		ret = 0;
+		ret = 1;
 	}
 	return ret;
 }
@@ -74,11 +79,12 @@ int readString(PT_RingBuffer ringbuf,char *buf,int maxlen)
     RINGBUF_DEBUG("lock in readString mReadPos=%d mWritePos=%d \r\n",ringbuf->mReadPos,ringbuf->mWritePos);
 	for(i=0;i< maxlen;i++)
 	{
-		if(isEmpty(ringbuf) == 0)
+		if(isEmpty(ringbuf))
 			break;
 		
 		*pbuf = ringbuf->mBuf[ringbuf->mReadPos++];
 		pbuf++;
+		ringbuf->mReadPos = ringbuf->mReadPos % ringbuf->mLen;
 	}
 
     RINGBUF_DEBUG("unlock in readString\r\n");
@@ -95,13 +101,14 @@ int writeString(PT_RingBuffer ringbuf,char *buf,int len)
     RINGBUF_DEBUG("lock in writeString\r\n");
 	for(i=0;i<len;i++)
 	{
-		if(isFull(ringbuf) == 0){
-            
+		if(isFull(ringbuf) == 0)
+		{    
             break;
         }
 		
 		ringbuf->mBuf[ringbuf->mWritePos++] = *pbuf;
 		pbuf++;
+		ringbuf->mWritePos = ringbuf->mWritePos % ringbuf->mLen;
 	}
 
     RINGBUF_DEBUG("unlock in writeString\r\n");
@@ -117,6 +124,7 @@ int readChar(PT_RingBuffer ringbuf,char *ch)
 	if(isEmpty(ringbuf) != 0)
 	{
 		*ch = ringbuf->mBuf[ringbuf->mReadPos++];
+		ringbuf->mReadPos = ringbuf->mReadPos % ringbuf->mLen;
 		ret = 1;
 	}
 	pthread_mutex_unlock(&ringbuf->mMutex);
@@ -131,6 +139,7 @@ int writeChar(PT_RingBuffer ringbuf,char ch)
 	if(isFull(ringbuf) != 0)
 	{
 		ringbuf->mBuf[ringbuf->mWritePos++] = ch;
+		ringbuf->mWritePos = ringbuf->mWritePos % ringbuf->mLen;
 		ret = 1;
 	}
 	pthread_mutex_unlock(&ringbuf->mMutex);

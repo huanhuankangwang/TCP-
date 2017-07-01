@@ -1,6 +1,6 @@
 HOME_PATH := $(shell pwd)
 HOME_PATH_INCLUDE:= $(HOME_PATH)/include/
-CFLAGS  := -lpthread 
+CFLAGS  := -lpthread -rdynamic
 CFLAGS2 := -I$(HOME_PATH_INCLUDE) -I$(HOME_PATH_INCLUDE)/common/
 CC:= gcc
 LD:=ld
@@ -8,7 +8,7 @@ LD:=ld
 
 export CFLAGS CFLAGS2 CC LD
 
-all:
+all:clean
 	make -C common
 	make -C test
 

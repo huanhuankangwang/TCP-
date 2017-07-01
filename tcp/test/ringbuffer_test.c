@@ -9,16 +9,17 @@ PT_RingBuffer ringbuf = NULL;
 
 static void *do_ringbuffer_test_thread(void*arg)
 {
+	PT_RingBuffer buf = (PT_RingBuffer)ringbuf;
 	char tmp[1024];
 	int ret;
 
 	do
 	{
 		memset(tmp,0,1024);
-	    ret = readString(ringbuf,tmp,1024);
+	    ret = readString(buf,tmp,1024);
 
 		if(ret >0)
-		printf("readstring =%s\r\n",tmp);
+			printf("readstring =%s\r\n",tmp);
 	}while(1);
 }
 
@@ -32,7 +33,7 @@ int main()
 	printf("sizeof(tmp) =%d\r\n",sizeof(tmp));
 
 	
-	ret = pthread_create(&pid,NULL,do_ringbuffer_test_thread,NULL);
+	ret = pthread_create(&pid,NULL,do_ringbuffer_test_thread,ringbuf);
 	if(ret <0)
 	{
 		printf("pthread_create err! \r\n");
@@ -51,6 +52,7 @@ int main()
 			printf("empty\r\n");
 			continue;
 		}
+
 		ret = writeString(ringbuf,tmp,len);
 	    if(ret != len)
 		{
