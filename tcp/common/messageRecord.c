@@ -34,18 +34,13 @@ int free_record(MessageRecord *record)
 	return 0;
 }
 
-MessageRecord* malloc_record(unsigned cseq, MessageType messageType, char const* contentStr)
+MessageRecord* malloc_record(unsigned cseq, MessageType messageType, char const* contentStr,int len)
 {
-	int len = 0 ;
-	len = strlen(contentStr);
-	
-	if(len <= 0)
-	{
+	if(len <= 0 || !contentStr)
 		return NULL;
-	}
-	MessageRecord *record = malloc(sizeof(MessageRecord));
 	
-	if(record == NULL)
+	MessageRecord *record = malloc(sizeof(MessageRecord));
+	if(!record)
 	{
 		return NULL;
 	}
@@ -57,9 +52,10 @@ MessageRecord* malloc_record(unsigned cseq, MessageType messageType, char const*
 		record = NULL;
 	}
 	
-	strcpy(record->fContentStr, contentStr);
+	strncpy(record->fContentStr, contentStr ,len);
 	record->fCSeq = cseq;
 	record->messageType = messageType;
+	record->mLen  = len;
 	
 	return record;
 }

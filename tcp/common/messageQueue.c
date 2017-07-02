@@ -39,7 +39,6 @@ MessageQueue *malloc_messageQueue()
 
 int free_messageQueue(MessageQueue *queue)
 {
-    pthread_mutex_lock(&queue->cond_lock);
 	MessageRecord * tail = queue->fHead;
 	MessageRecord * temp = NULL;
 	while(tail)
@@ -48,7 +47,10 @@ int free_messageQueue(MessageQueue *queue)
 		free_record(tail);
 		tail = temp;
 	}
-	pthread_mutex_unlock(&queue->cond_lock);
+	
+	pthread_mutex_destroy(&queue->cond_lock);
+	free(queue);
+	queue = NULL;
 	return 0;
 }
 

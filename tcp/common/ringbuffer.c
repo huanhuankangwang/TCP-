@@ -42,6 +42,7 @@ int	freeRingBuffer(PT_RingBuffer ringbuf)
 {
 	if(ringbuf)
 	{
+		pthread_mutex_destroy(&ringbuf->mMutex);
 		free(ringbuf->mBuf);
         ringbuf->mBuf = NULL;
 		free(ringbuf);

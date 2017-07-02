@@ -99,11 +99,6 @@ PT_FileReader openFileReader(const char* filename,int bufSize)
 			break;
 		}
 
-		pthread_mutex_init(&filereader->mutex, NULL);
-		pthread_cond_init(&filereader->cond,NULL);
-		filereader->isRunning  = RUNNING;
-        filereader->flag = NO_END_OF_FILE;
-
 		ret = pthread_create(&filereader->pid,NULL,do_read_thread,(void*)filereader);
 	    if(ret!=0)  
 	    {  
@@ -113,7 +108,12 @@ PT_FileReader openFileReader(const char* filename,int bufSize)
 			free(filereader);
 			filereader = NULL;
 			break;
-	    }  
+	    }
+
+		pthread_mutex_init(&filereader->mutex, NULL);
+		pthread_cond_init(&filereader->cond,NULL);
+		filereader->isRunning  = RUNNING;
+        filereader->flag = NO_END_OF_FILE;
 
 	}while(0);
 
@@ -144,6 +144,7 @@ int closeFileReader(PT_FileReader reader)
 
         //pthread_kill(tid, SIGTERM); //Ç¿ÖÆÉ±ËÀ
         pthread_cond_destroy(&reader->cond);
+		pthread_mutex_destroy(&reader->mutex);
 		closefile(reader->fd);
 		freeRingBuffer(reader->ringbuf);
 		reader->ringbuf = NULL;

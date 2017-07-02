@@ -9,6 +9,7 @@ typedef struct _MessageRecord
     struct _MessageRecord* fNext;
     int fCSeq;
     MessageType messageType;
+	int   mLen;
     char* fContentStr;
 }MessageRecord;
 
@@ -17,7 +18,7 @@ MessageRecord* next(MessageRecord *record);
 unsigned cseq(MessageRecord *record);
 char* contentStr(MessageRecord *record);
 int free_record(MessageRecord *record);
-MessageRecord* malloc_record(unsigned cseq, MessageType messageType, char const* contentStr);
+MessageRecord* malloc_record(unsigned cseq, MessageType messageType, char const* contentStr,int len);
 
 
 #endif//_MESSAGE_RECORD_H_

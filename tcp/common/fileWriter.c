@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <malloc.h>
+#include <string.h>
 
 #include <fileWriter.h>
 
@@ -88,11 +89,6 @@ PT_FileWriter openFileWriter(const char* filename,int bufSize)
 			break;
 		}
 
-		pthread_mutex_init(&writer->mutex, NULL);
-		pthread_cond_init(&writer->cond,NULL);
-		writer->isRunning  = RUNNING;
-		writer->flag	   = WRITE_SUCCESS;
-
 		ret = pthread_create(&writer->pid,NULL,do_write_thread,(void*)writer);
 	    if(ret!=0)  
 	    {  
@@ -102,7 +98,12 @@ PT_FileWriter openFileWriter(const char* filename,int bufSize)
 			free(writer);
 			writer = NULL;
 			break;
-	    }  
+	    }
+
+		pthread_mutex_init(&writer->mutex, NULL);
+		pthread_cond_init(&writer->cond,NULL);
+		writer->isRunning  = RUNNING;
+		writer->flag	   = WRITE_SUCCESS;
 
 	}while(0);	
 
@@ -123,6 +124,7 @@ int closeFileWriter(PT_FileWriter writer)
         }
 
         pthread_cond_destroy(&writer->cond);
+		pthread_mutex_destroy(&writer->mutex);
 		closefile(writer->fd);
 		freeRingBuffer(writer->ringbuf);
 		writer->ringbuf = NULL;

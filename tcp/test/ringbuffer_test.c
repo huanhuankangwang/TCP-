@@ -1,9 +1,10 @@
 #include <ringbuffer.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <malloc.h>
+#include <string.h>
 
-
-pthread_t  pid = NULL;
+pthread_t  pid;
 PT_RingBuffer ringbuf = NULL;
 
 

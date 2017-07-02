@@ -3,6 +3,8 @@
 
 #include <signal.h>
 #include <stdio.h>
+#include <malloc.h>
+#include <stdlib.h>
 
 #define   readfile  "0.jpg"
 #define   outfile   "1.jpg"

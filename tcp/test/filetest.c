@@ -1,6 +1,9 @@
 #include <fileReader.h>
 #include <fileWriter.h>
 
+#include <stdio.h>
+
+
 #define   readfile  "0.jpg"
 #define   outfile   "1.jpg"
 

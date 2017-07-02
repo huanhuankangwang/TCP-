@@ -6,6 +6,7 @@ extern  int sockfd;
 
 int 	read_data(int *type,unsigned char *data,int *len);
 int 	write_data(int type,unsigned char *data,int len);
+
 //#define     	packet_debug			printf
 #define     	packet_debug(...)
 

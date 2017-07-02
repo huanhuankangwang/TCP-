@@ -1,6 +1,8 @@
 #include <fileReader.h>
 #include <fileWriter.h>
 
+#include <stdio.h>
+
 #define   outfile   "temp"
 
 #define  BUFFSIZE   (1024*20)
