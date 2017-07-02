@@ -218,7 +218,7 @@ int ctrl_decompose_frame(char *msg, int msgLen,BusMsg *pOutdata)
         crcGen = easy_crc32(msg, pcMsgTemp - msg);
         EB_LOGD(EB_LOG_NORMAL, "crcRecv:0x%x, crcGen:0x%x", crcRecv, crcGen);
         if (crcRecv != crcGen) {
-            EB_LOGE("crc error !");
+            EB_LOGE("crc error !\r\n");
             return -7;
         }
     }
@@ -263,8 +263,9 @@ int receive_busMsg(int nSocketFd, BusMsg *data)
 	int  nRecvLen;
 	int nAddrLen;
 	struct sockaddr_in recvAddr;
-	char acData[1024];
-	int contentLen;
+	char acData[BUS_FRAME_MIN_LEN+BUS_MSGDATA_MAX_LEN+1];
+	int contentLen = 0;
+	int ret;
 
 	nAddrLen = sizeof(recvAddr);
 
@@ -273,16 +274,17 @@ int receive_busMsg(int nSocketFd, BusMsg *data)
 
 		if(nRecvLen > 0) {
 			BusAddr addr;
-			BusMsg data;
 
 			memset((void *)&addr, 0, sizeof(addr));
 			strcpy(addr.ip, (char* )inet_ntoa(recvAddr.sin_addr));
 			addr.port = ntohs(recvAddr.sin_port);
 
-			memset((void *)&data, 0, sizeof(BusMsg));
-			ctrl_decompose_frame(acData, nRecvLen, &data);
-			contentLen = strlen(data.msgData);
-			//EB_LOGE( "recvAddr:%s:%d, data.msgData = %s\r\n", addr.ip, addr.port, data.msgData);
+			memset((void *)data, 0, sizeof(BusMsg));
+			ret = ctrl_decompose_frame(acData, nRecvLen, data);
+			if(!ret)
+				contentLen = data->msgDataSize;
+			EB_LOGE("cseq =%d,msgtype=%s\r\n",data->mCseq,data->msgType);
+			//EB_LOGE( "recvAddr:%s:%d, ret =%d \r\n", addr.ip, addr.port,ret);
 		}
 
 		EB_LOGD(EB_LOG_NORMAL, "nRecvLen = %d contentLen: %d, errno = %d", nRecvLen, contentLen, errno);
@@ -291,7 +293,7 @@ int receive_busMsg(int nSocketFd, BusMsg *data)
 	return contentLen;
 }
 
-static int send_(int sockfd,char *ip, int port, char *cmd, unsigned short cmd_len)
+static int send_(int sockfd,char *ip, int port, char *cmd, int cmd_len)
 {
     struct sockaddr_in clientAddr;
 
@@ -311,7 +313,8 @@ static int send_(int sockfd,char *ip, int port, char *cmd, unsigned short cmd_le
     clientAddr.sin_port = htons(port);
 	
     if (sendto(sockfd, cmd, cmd_len, 0, (struct clientAddr *) &clientAddr,
-               sizeof(clientAddr)) < 0) {
+               sizeof(clientAddr)) < 0)
+   	{
         EB_LOGE("sendto failed, %s\r\n", strerror(errno));
         return -1;
     }
@@ -332,9 +335,9 @@ int send_busMsg(int sockfd,BusMsg *msg)
 	}
 	else
 	{
-	   ret = send_(sockfd,msg->remoteAddr.ip,msg->remoteAddr.port,frame,ret);
+	   send_(sockfd,msg->remoteAddr.ip,msg->remoteAddr.port,frame,ret);
 	   //EB_LOGE(" sensor state easybus send ok, ip=%s port=%d ret = %d msg.mCseq =%d \r\n", msg->remoteAddr.ip,msg->remoteAddr.port,ret,msg->mCseq);
 	}
-	
+	return ret;
 }
 

@@ -19,4 +19,4 @@ test_frame:test_frame.o
 	$(CC) -o $@  $^ $(OBJ) $(CFLAGS) $(LOCAL_CFLASS)
 
 clean:
-	rm *.o writertest test_frame -rf
+	rm *.o wtftp_test test_frame -rf
