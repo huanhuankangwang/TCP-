@@ -169,13 +169,12 @@ int read_line(int fd,const char *buf,int maxsize)
 	return len;
 }
 
-long getFileSize(int fd)
+long getFileSize(const char *filename)
 {
-    long  size;
-
-    size = lseek(fd,0L,SEEK_END);  
-    lseek(fd,0L,SEEK_SET);  
-
+    struct stat statbuf;  
+    stat(filename,&statbuf);  
+    int size = statbuf.st_size;  
+  
     return size;
 }
 

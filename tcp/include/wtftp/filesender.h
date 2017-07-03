@@ -9,8 +9,12 @@ typedef struct _FileSender{
 	PT_Sender      sender;
 	PT_FileReader  filereader;
 
+	int 			readEnd;
+
 	int             isRunning;
 	int 			flag;
+	pthread_mutex_t mutex;
+	pthread_cond_t  cond;
 	pthread_t      pid;
 }T_FileSender,*PT_FileSender;
 

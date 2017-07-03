@@ -14,6 +14,8 @@
 #include <pthread_define.h>
 
 
+#define	 SENDER_MAX_QUEUE_SIZE			(50)
+
 #define  SENDER_MSG_TYPE				"sender"
 #define  REPLY_MSG_TYPE					"reply"
 #define  REPLAY_OK						"reply ok"
@@ -52,7 +54,6 @@ static void *do_sender_thread(void*arg)
 
 	do
 	{
-		pthread_mutex_lock(&sender->mutex);
 
 		memset(&msg ,0 , sizeof(BusMsg));
 		if( sender_receive(sender,&msg) > 0)
@@ -61,15 +62,22 @@ static void *do_sender_thread(void*arg)
 			if(strcmp(msg.msgType , REPLY_MSG_TYPE ))
 			{
 				//找到相应的位置
-				if(strcmp(msg.msgData,"reply ok"))
+				if(strcmp(msg.msgData,REPLAY_OK))
 				{
+					pthread_mutex_lock(&sender->mutex);
 					record = removeOneByCseq(&sender->queue, msg.mCseq);
 					if(record)
+					{
+						pthread_cond_signal(&sender->cond);
 						free_record(record);
+						record = NULL;
+					}
+					pthread_mutex_unlock(&sender->mutex);
 				}
 			}
 		}
 
+		pthread_mutex_lock(&sender->mutex);
 		record = dequeue(&sender->queue);
 		if(record)
 		{
@@ -80,7 +88,6 @@ static void *do_sender_thread(void*arg)
 			//历史中没有记录 所以阻塞在这里等待 新记录
 			pthread_cond_wait(&sender->cond,&sender->mutex);
 		}
-
 		pthread_mutex_unlock(&sender->mutex);		
 		
 	}while(1);
@@ -188,11 +195,18 @@ int writeSender(PT_Sender sender,char *cmd,int len)
 
 	do
 	{
-		pthread_mutex_lock(&sender->mutex);
+		
 		if(!cmd || !sender)
 		{
 			ret = -1;
 			return ret;
+		}
+
+		pthread_mutex_lock(&sender->mutex);
+		if(getQueueLength(&sender->queue) > SENDER_MAX_QUEUE_SIZE)
+		{
+			//队列太长在 等待
+			pthread_cond_wait(&sender->cond,&sender->mutex);
 		}
 		record   = malloc_record(sender->cseq,0,cmd,len);
 		if(!record)

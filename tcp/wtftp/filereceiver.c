@@ -30,6 +30,12 @@ static void *do_filereceiver_thread(void*arg)
 		}
 	}while(recv->isRunning == RUNNING);
 
+	//等待这两个线程退出
+		if(recv->writer)
+			pthread_join(recv->writer->pid,NULL);
+		if(recv->receiver)
+			pthread_join(recv->receiver->pid,NULL);
+
 	recv->isRunning = RUNNING_QUIT;
 	recv->flag      = FLAG_NOT_VALID;
 }
@@ -94,17 +100,19 @@ PT_FileReceiver openFileReceiver(const char * filename,const char * remoteIp,
 
 int closeFileReceiver(PT_FileReceiver recv)
 {
+	if(!recv)
+		return 0;
+
+	closeFileWriter(recv->writer);
+	recv->writer = NULL;
+	closeReceiver(recv->receiver);
+	recv->receiver = NULL;	
 	if(recv->flag == FLAG_VALID)
 	{
 		recv->isRunning = NOT_RUNNING;
 		while(recv->isRunning != RUNNING_QUIT);
-		
 	}
 
-	closeReceiver(recv->receiver);
-	recv->receiver = NULL;
-	closeFileWriter(recv->writer);
-	recv->writer = NULL;
 	free(recv);
 	recv = NULL;
 

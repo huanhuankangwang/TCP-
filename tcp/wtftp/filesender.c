@@ -3,6 +3,10 @@
 
 #include <malloc.h>
 
+
+#define     FILE_READ_END				(1)
+#define     FILE_NOT_READ_END			(0)
+
 void *do_fileSender_thread(void*arg)
 {
 	char  tmp[1024];
@@ -15,14 +19,16 @@ void *do_fileSender_thread(void*arg)
 	
 	do
 	{
-		ret  = readFileReader(sender->filereader,tmp,sizeof(tmp));
-		if(ret <  0)
-       	{
-            break;
-       	}else if(ret == 0)
-       	{
-			continue;
-	   	}
+		{
+			ret  = readFileReader(sender->filereader,tmp,sizeof(tmp));
+			if(ret <  0)
+	       	{
+	       		break;
+	       	}else if(ret == 0)
+	       	{
+				continue;
+		   	}
+		}
 
 		len  = ret;
 		ret = writeSender(sender->sender,tmp,len);
@@ -33,6 +39,11 @@ void *do_fileSender_thread(void*arg)
 		
 	}while(sender->isRunning == RUNNING);
 
+//等待这两个线程退出
+	if(sender->filereader)
+		pthread_join(sender->filereader->pid,NULL);
+	if(sender->sender)
+		pthread_join(sender->sender->pid,NULL);
 	sender->flag      = FLAG_NOT_VALID;
 	sender->isRunning = RUNNING_QUIT;
 }
@@ -76,8 +87,11 @@ PT_FileSender openFileSender(char *filename,char *remoteIp,int port,int bindport
 			break;			
 		}
 
+		//pthread_mutex_init(&sender->mutex, NULL);
+		//pthread_cond_init(&sender->cond,NULL);
 		sender->flag      = FLAG_VALID;
 		sender->isRunning = RUNNING;
+		sender->readEnd   = FILE_NOT_READ_END;
 	}while(0);
 
 	return sender;
@@ -90,6 +104,12 @@ int closeFileSender(PT_FileSender sender)
 	
 	if(!sender)
 		return ret;
+
+	//先让子线程 退出
+	closeFileReader(sender->filereader);
+	sender->filereader = NULL;
+	closeSender(sender->sender);
+	sender->sender = NULL;
 
 	if(sender)
 	{
@@ -111,10 +131,7 @@ int closeFileSender(PT_FileSender sender)
         //pthread_kill(tid, SIGTERM); //强制杀死
         //pthread_mutex_destroy(&sender->mutex);
         //pthread_cond_destroy(&sender->cond);
-		closeSender(sender->sender);
-		sender->sender = NULL;
-		closeFileReader(sender->filereader);
-		sender->filereader = NULL;
+
 		free(sender);
 		sender = NULL;
 
