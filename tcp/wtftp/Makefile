@@ -7,14 +7,19 @@ LOCAL_CFLASS:= -I$(HOME_PATH_INCLUDE)/wtftp/
 	$(CC) -g -c $^
 	
 %.o : %.c
-	$(CC) -g $(CFLAGS) $(CFLAGS2) $(LOCAL_CFLASS) -c $^
+	$(CC) -g -fPIC $(CFLAGS) $(CFLAGS2) $(LOCAL_CFLASS) -c $^
 
-all:wtftp.a
-	make -C test
+TARGET:=libwtftp.so
 	
+all:$(TARGET)
+
+$(TARGET):$(OBJS)
+	$(CC) $^ -shared -lpthread -L$(HOME_PATH_LIBS) -lcommon  -o $@
+	mv $@ $(HOME_PATH_LIBS)/$@
+
+
 wtftp.a:$(OBJS)
 	$(LD) -r -o $@ $^
 
 clean:
-	make clean -C test
 	rm *.o *.a -rf

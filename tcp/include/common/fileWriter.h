@@ -34,5 +34,7 @@ int closeFileWriter(PT_FileWriter writer);
 */
 int writeFileWriter(PT_FileWriter writer,char *str,int len);
 
+int FileWriter_isRuning(PT_FileWriter writer);
+
 
 #endif//_FILE_WRITER_H_

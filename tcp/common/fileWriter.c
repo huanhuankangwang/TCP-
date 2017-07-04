@@ -192,3 +192,8 @@ int writeFileWriter(PT_FileWriter writer,char *str,int len)
     return len;
 }
 
+int FileWriter_isRuning(PT_FileWriter writer)
+{
+    return (writer->isRunning == RUNNING);
+}
+
