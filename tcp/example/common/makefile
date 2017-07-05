@@ -8,7 +8,7 @@ OBJ:=
 OBJS:= filetest.o
 
 
-TARGET:= testapp writertest ringbuffer_test readerTest
+TARGET:= testapp writertest ringbuffer_test readerTest test_queue
 
 all:$(TARGET)
 
@@ -22,6 +22,9 @@ ringbuffer_test:ringbuffer_test.o
 	$(CC) -o $@  $^ $(OBJ) $(CFLAGS)
 
 readerTest:readerTest.o
+	$(CC) -o $@  $^ $(OBJ) $(CFLAGS)
+
+test_queue:test_queue.o
 	$(CC) -o $@  $^ $(OBJ) $(CFLAGS)
 
 clean:

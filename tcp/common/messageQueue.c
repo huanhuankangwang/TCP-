@@ -39,6 +39,7 @@ MessageQueue *malloc_messageQueue()
 
 int free_messageQueue(MessageQueue *queue)
 {
+    pthread_mutex_lock(&queue->cond_lock);
 	MessageRecord * tail = queue->fHead;
 	MessageRecord * temp = NULL;
 	while(tail)
@@ -47,7 +48,7 @@ int free_messageQueue(MessageQueue *queue)
 		free_record(tail);
 		tail = temp;
 	}
-	
+	pthread_mutex_unlock(&queue->cond_lock);
 	pthread_mutex_destroy(&queue->cond_lock);
 	free(queue);
 	queue = NULL;
@@ -129,7 +130,18 @@ MessageRecord* removeOneByCseq(MessageQueue * queue,int cseq)
                     LOGE("this way\r\n");
                 }
                 
-            }else 
+            }else if(p == queue->fTail)
+            {
+                if(p == queue->fHead)
+                {
+                    queue->fHead = NULL;
+                    queue->fTail = NULL;
+                }else
+                {
+                    queue->fTail = pp;
+                    pp->fNext = NULL;
+                }
+            }else
             {
                 LOGE("rm others \r\n");
                 pp->fNext = p->fNext;
@@ -138,11 +150,11 @@ MessageRecord* removeOneByCseq(MessageQueue * queue,int cseq)
             //free_record(p);
             ret = p;
             ret->fNext = NULL;
-            break;  
+            break;
         }
     }
     
-    pthread_mutex_unlock(&queue->cond_lock);   
+    pthread_mutex_unlock(&queue->cond_lock);
 
     return ret;
 }
