@@ -180,7 +180,6 @@ int readFileReader(PT_FileReader reader,char *str,int maxsize)
        str  += ret;
     }
 
-    
     pthread_cond_signal(&reader->cond);
     FILE_READER_DEBUG("unlock in readFileReader\r\n");
     pthread_mutex_unlock(&reader->mutex);

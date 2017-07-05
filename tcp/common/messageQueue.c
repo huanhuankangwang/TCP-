@@ -48,6 +48,10 @@ int free_messageQueue(MessageQueue *queue)
 		free_record(tail);
 		tail = temp;
 	}
+
+	queue->mLen  = 0;
+	queue->fHead = NULL;
+	queue->fTail = NULL;
 	pthread_mutex_unlock(&queue->cond_lock);
 	pthread_mutex_destroy(&queue->cond_lock);
 	free(queue);
@@ -57,6 +61,8 @@ int free_messageQueue(MessageQueue *queue)
 
 void enqueue(MessageQueue *queue,MessageRecord* record)
 {
+	if(!queue || !record)
+		return ;
     pthread_mutex_lock(&queue->cond_lock);
     if (queue->fTail == NULL) {
         queue->fHead = record;
@@ -70,6 +76,8 @@ void enqueue(MessageQueue *queue,MessageRecord* record)
 
 MessageRecord* dequeue(MessageQueue *queue)
 {
+	if(!queue)
+		return NULL;
     pthread_mutex_lock(&queue->cond_lock);
     MessageRecord* record = queue->fHead;
     if (queue->fHead == queue->fTail) {
@@ -90,16 +98,17 @@ MessageRecord* dequeue(MessageQueue *queue)
 
 void putAtHead(MessageQueue *queue,MessageRecord* record) 
 {
+	if(!queue || !record)
+		return ;
     pthread_mutex_lock(&queue->cond_lock);
-
     record->fNext = queue->fHead;
     queue->fHead = record;
     if (queue->fTail == NULL) {
         queue->fTail = record;
     }
+	queue->mLen++;
     pthread_mutex_unlock(&queue->cond_lock);
 }
-
 
 MessageRecord* removeOneByCseq(MessageQueue * queue,int cseq)
 {
@@ -111,7 +120,7 @@ MessageRecord* removeOneByCseq(MessageQueue * queue,int cseq)
 
     for (p = pp = queue->fHead; p != NULL; pp = p , p = p->fNext ) 
 	{
-	    LOGE("loop p=%p\r\n",p);
+	    LOGE("loop p=%p  cSeq =%d  cseq=%d\r\n",p,p->fCSeq ,cseq);
         if (p->fCSeq == cseq)
         {
             LOGE("find cseq=%d\r\n",cseq);
@@ -139,7 +148,7 @@ MessageRecord* removeOneByCseq(MessageQueue * queue,int cseq)
                 }else
                 {
                     queue->fTail = pp;
-                    pp->fNext = NULL;
+                    queue->fTail->fNext = NULL;
                 }
             }else
             {

@@ -12,7 +12,7 @@ TARGET:=libcommon.so
 all:$(TARGET)
 
 $(TARGET):$(OBJS)
-	$(CC) $^ -shared -lpthread -o $@
+	$(CC) $^ -shared -lpthread  -o $@
 	mv $@ $(HOME_PATH_LIBS)/$@
 	
 common.a:$(OBJS)

@@ -14,7 +14,7 @@
 #include <pthread_define.h>
 
 
-#define	 SENDER_MAX_QUEUE_SIZE			(50)
+#define	 SENDER_MAX_QUEUE_SIZE			(20)
 
 #define  SENDER_MSG_TYPE				"sender"
 #define  REPLY_MSG_TYPE					"reply"
@@ -54,25 +54,29 @@ static void *do_sender_thread(void*arg)
 
 	do
 	{
-
 		memset(&msg ,0 , sizeof(BusMsg));
 		if( sender_receive(sender,&msg) > 0)
 		{
 			//成功接收到了
-			if(strcmp(msg.msgType , REPLY_MSG_TYPE ))
+			if(strcmp(msg.msgType , REPLY_MSG_TYPE ) == 0)
 			{
 				//找到相应的位置
-				if(strcmp(msg.msgData,REPLAY_OK))
+				if(strcmp(msg.msgData,REPLAY_OK) == 0)
 				{
-					pthread_mutex_lock(&sender->mutex);
+					printf("receive replay_ok type=%s msgdata=%s\r\n",msg.msgType,msg.msgData);
+					printf("this way msg.mCseq =%d\r\n",msg.mCseq);
 					record = removeOneByCseq(&sender->queue, msg.mCseq);
+					printf("this way record =%d\r\n",record);
 					if(record)
 					{
+						printf("removeOneByCseq \r\n");
+						pthread_mutex_lock(&sender->mutex);
 						pthread_cond_signal(&sender->cond);
+						pthread_mutex_unlock(&sender->mutex);
 						free_record(record);
 						record = NULL;
 					}
-					pthread_mutex_unlock(&sender->mutex);
+					
 				}
 			}
 		}
@@ -81,9 +85,10 @@ static void *do_sender_thread(void*arg)
 		record = dequeue(&sender->queue);
 		if(record)
 		{
-			usleep(20);
 			sender_send(sender,record->fContentStr,record->mLen,record->fCSeq);
-			enqueue(&sender->queue,record);//继续放入其中 直到被读出为止
+
+			putAtHead(&sender->queue,record);
+			//enqueue(&sender->queue,record);//继续放入其中 直到被读出为止
 		}else{
 			//历史中没有记录 所以阻塞在这里等待 新记录
 			pthread_cond_wait(&sender->cond,&sender->mutex);
@@ -192,22 +197,29 @@ int writeSender(PT_Sender sender,char *cmd,int len)
 {
 	MessageRecord  *record = NULL;
 	int ret =0;
+	int mlen = 0;
 
 	do
 	{
-		
 		if(!cmd || !sender)
 		{
 			ret = -1;
 			return ret;
 		}
 
-		pthread_mutex_lock(&sender->mutex);
-		if(getQueueLength(&sender->queue) > SENDER_MAX_QUEUE_SIZE)
+		mlen = getQueueLength(&sender->queue);
+		printf("wait for wait len=%d\r\n",mlen);
+		if(mlen > SENDER_MAX_QUEUE_SIZE)
 		{
+			pthread_mutex_lock(&sender->mutex);
+
+			printf("sender pthread_cond_wait\r\n");
 			//队列太长在 等待
 			pthread_cond_wait(&sender->cond,&sender->mutex);
+			pthread_mutex_unlock(&sender->mutex);
 		}
+
+		printf("writeSender cseq =%d\r\n",sender->cseq);
 		record   = malloc_record(sender->cseq,0,cmd,len);
 		if(!record)
 		{
@@ -217,7 +229,7 @@ int writeSender(PT_Sender sender,char *cmd,int len)
 
 		sender_send(sender,cmd,len ,sender->cseq++);
 		enqueue(&sender->queue,record);
-		
+		pthread_mutex_lock(&sender->mutex);
 		//唤醒
 		pthread_cond_signal(&sender->cond);
 		pthread_mutex_unlock(&sender->mutex);
