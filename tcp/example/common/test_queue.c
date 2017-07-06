@@ -18,8 +18,6 @@ int print_queue(MessageQueue *queue)
     while(p)
     {
         printf("list cseq = %d  sucess\r\n",p->fCSeq);
-        if(p == queue->fTail)
-            break;
         p = p->fNext;
     }
 

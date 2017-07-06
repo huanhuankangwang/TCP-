@@ -5,7 +5,7 @@ OBJS:= wthread.o wthread_private.o
 	$(CC) -g -c $^
 	
 %.o : %.c
-	$(CC) -g  -fPIC $(CFLAGS) $(CFLAGS2) $(WTHREAD_INCLUDE) -c $^
+	$(CC) -g  -fPIC $(CFLAGS2) $(WTHREAD_INCLUDE) -c $^
 
 TARGET:= libwthread.so
 all:$(TARGET)

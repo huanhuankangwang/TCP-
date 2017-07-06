@@ -62,7 +62,7 @@ pthread_t wthread_create(pthread_t *pid,const pthread_attr_t *attr,
         wp->pid = *pid;
 	}while(0);
 
-    printf("wthread_create pid=%d\r\n",pid);
+    printf("wthread_create pid=%d\r\n",*(int*)pid);
 	
 	return ret;
 }

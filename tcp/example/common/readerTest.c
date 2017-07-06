@@ -1,10 +1,17 @@
-#include <fileReader.h>
-#include <fileWriter.h>
-
 #include <signal.h>
 #include <stdio.h>
 #include <malloc.h>
 #include <stdlib.h>
+#include <execinfo.h>
+
+
+#include <fileReader.h>
+#include <fileWriter.h>
+#include <ringbuffer.h>
+
+#include <fileoperation.h>
+
+
 
 #define   readfile  "0.jpg"
 #define   outfile   "1.jpg"
@@ -28,7 +35,7 @@ static void WidebrightSegvHandler(int signum)
 
     fprintf(stderr, "widebright received SIGSEGV! Stack trace:\n");
     for (i = 0; i < size; i++) {
-        fprintf(stderr, "%d %s \n",i,strings[i]);
+        fprintf(stderr, "%ld %s \n",i,strings[i]);
     }
 
     free (strings);

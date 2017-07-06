@@ -18,7 +18,7 @@ typedef struct
 PT_FileReceiver openFileReceiver(const char * filename,const char * remoteIp,
 		int port,int bindPort);
 
-int closeFilesReceiver(PT_FileReceiver recv);
+int closeFileReceiver(PT_FileReceiver recv);
 
 
 #endif//_FILE_RECEIVER_H_

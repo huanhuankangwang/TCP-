@@ -263,7 +263,7 @@ int receive_busMsg(int nSocketFd, BusMsg *data)
 	int  nRecvLen;
 	int nAddrLen;
 	struct sockaddr_in recvAddr;
-	char acData[BUS_FRAME_MIN_LEN+BUS_MSGDATA_MAX_LEN+1];
+	char acData[BUS_FRAME_MIN_LEN+BUS_MSGDATA_MAX_LEN];
 	int contentLen = 0;
 	int ret;
 
@@ -327,7 +327,7 @@ static int send_(int sockfd,char *ip, int port, char *cmd, int cmd_len)
 int send_busMsg(int sockfd,BusMsg *msg)
 {
 	int ret;
-	char  frame[BUS_FRAME_MIN_LEN + BUS_MSGDATA_MAX_LEN + 1];
+	char  frame[BUS_FRAME_MIN_LEN + BUS_MSGDATA_MAX_LEN ];
 	ret = ctrl_compose_frame(msg , frame);
 	if( ret <= 0 )
 	{

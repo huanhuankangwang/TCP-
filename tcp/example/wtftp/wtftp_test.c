@@ -1,7 +1,3 @@
-#include <filereceiver.h>
-#include <filesender.h>
-
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -15,6 +11,10 @@
 #include <sys/ioctl.h>  
 #include <net/if.h>
 
+
+#include <filereceiver.h>
+#include <filesender.h>
+#include <fileoperation.h>
 
 #define    EB_LOGE  printf
 

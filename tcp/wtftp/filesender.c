@@ -1,7 +1,10 @@
+#include <malloc.h>
+#include <string.h>
+#include <unistd.h>
+
+
 #include <filesender.h>
 #include <pthread_define.h>
-
-#include <malloc.h>
 
 
 #define     FILE_READ_END				(1)
@@ -20,6 +23,7 @@ void *do_fileSender_thread(void*arg)
 	do
 	{
 		{
+            memset((void*)tmp ,0,sizeof(tmp));
 			ret  = readFileReader(sender->filereader,tmp,sizeof(tmp));
 			if(ret <  0)
 	       	{

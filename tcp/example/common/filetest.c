@@ -1,7 +1,8 @@
+#include <stdio.h>
+
 #include <fileReader.h>
 #include <fileWriter.h>
-
-#include <stdio.h>
+#include <fileoperation.h>
 
 
 #define   readfile  "0.jpg"

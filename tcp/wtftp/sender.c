@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <malloc.h>
 
+#include <unistd.h>
 
 #include <sender.h>
 #include <packet_frame.h>
@@ -66,7 +67,7 @@ static void *do_sender_thread(void*arg)
 					printf("receive replay_ok type=%s msgdata=%s\r\n",msg.msgType,msg.msgData);
 					printf("this way msg.mCseq =%d\r\n",msg.mCseq);
 					record = removeOneByCseq(&sender->queue, msg.mCseq);
-					printf("this way record =%d\r\n",record);
+					printf("this way record =%p\r\n",record);
 					if(record)
 					{
 						printf("removeOneByCseq \r\n");
@@ -201,7 +202,7 @@ int writeSender(PT_Sender sender,char *cmd,int len)
 
 	do
 	{
-		if(!cmd || !sender)
+		if(!cmd || !sender || len <= 0)
 		{
 			ret = -1;
 			return ret;
@@ -209,7 +210,7 @@ int writeSender(PT_Sender sender,char *cmd,int len)
 
 		mlen = getQueueLength(&sender->queue);
 		printf("wait for wait len=%d\r\n",mlen);
-		if(mlen > SENDER_MAX_QUEUE_SIZE)
+		if(mlen >= SENDER_MAX_QUEUE_SIZE)
 		{
 			pthread_mutex_lock(&sender->mutex);
 
@@ -219,8 +220,9 @@ int writeSender(PT_Sender sender,char *cmd,int len)
 			pthread_mutex_unlock(&sender->mutex);
 		}
 
-		printf("writeSender cseq =%d\r\n",sender->cseq);
+		printf("writeSender cseq =%d len =%d\r\n",sender->cseq,len);
 		record   = malloc_record(sender->cseq,0,cmd,len);
+        printf("writeSender cseq =%d len =%d\r\n",sender->cseq,len);
 		if(!record)
 		{
 			ret = -1;
@@ -229,6 +231,7 @@ int writeSender(PT_Sender sender,char *cmd,int len)
 
 		sender_send(sender,cmd,len ,sender->cseq++);
 		enqueue(&sender->queue,record);
+        printf("sebder -> \r\n");
 		pthread_mutex_lock(&sender->mutex);
 		//»½ÐÑ
 		pthread_cond_signal(&sender->cond);

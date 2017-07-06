@@ -7,7 +7,7 @@ LOCAL_CFLASS:= -I$(HOME_PATH_INCLUDE)/wtftp/
 	$(CC) -g -c $^
 	
 %.o : %.c
-	$(CC) -g -fPIC $(CFLAGS) $(CFLAGS2) $(LOCAL_CFLASS) -c $^
+	$(CC) -g -fPIC $(CFLAGS2) $(LOCAL_CFLASS) -c $^
 
 TARGET:=libwtftp.so
 	

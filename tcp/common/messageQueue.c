@@ -69,7 +69,8 @@ void enqueue(MessageQueue *queue,MessageRecord* record)
     } else {
         queue->fTail->fNext = record;
     }
-    queue->fTail = record;
+    queue->fTail  = record;
+    record->fNext = NULL;
     queue->mLen++;
     pthread_mutex_unlock(&queue->cond_lock);
 }
@@ -171,7 +172,7 @@ MessageRecord* removeOneByCseq(MessageQueue * queue,int cseq)
 MessageRecord* findByCSeq(MessageQueue *queue,unsigned cseq) 
 {
     pthread_mutex_lock(&queue->cond_lock);
-    MessageRecord* record;
+    MessageRecord* record = NULL;
     for (record = queue->fHead; record != NULL; record = record->fNext ) 
 	{
         if (record->fCSeq == cseq)
@@ -192,10 +193,4 @@ int  getQueueLength(MessageQueue *queue)
     len = queue->mLen;
     pthread_mutex_unlock(&queue->cond_lock);
     return len;
-}
-
-
-MessageRecord *getByCSeq(MessageQueue *queue,int cseq)
-{
-    
 }

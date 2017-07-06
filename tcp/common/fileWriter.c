@@ -7,6 +7,8 @@
 #include <string.h>
 
 #include <fileWriter.h>
+#include <fileoperation.h>
+
 
 #define    FILE_WRITER_DEBUG(...)
 
@@ -24,6 +26,8 @@
 //最小的环形缓冲区大小
 #define     MIN_BUFFSIZE        (1024*2)
 
+
+int readFileWriter(PT_FileWriter writer,char *str,int maxsize);
 
 void *do_write_thread(void*arg)
 {

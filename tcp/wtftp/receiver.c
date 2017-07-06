@@ -7,6 +7,8 @@
 #include <netinet/in.h>
 #include <fcntl.h>
 #include <malloc.h>
+#include <unistd.h>
+
 
 #include <receiver.h>
 #include <packet_frame.h>

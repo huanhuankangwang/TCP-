@@ -22,7 +22,6 @@ int free_messageQueue(MessageQueue *queue) ;
 void enqueue(MessageQueue *queue,MessageRecord* record);
 MessageRecord* dequeue(MessageQueue *queue) ;
 void putAtHead(MessageQueue *queue,MessageRecord* record) ;
-MessageRecord* findByCSeq(MessageQueue *queue,unsigned cseq);
 
 int  getQueueLength(MessageQueue *queue);
 MessageRecord* removeOneByCseq(MessageQueue * queue,int cseq);

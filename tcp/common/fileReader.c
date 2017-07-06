@@ -1,11 +1,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
+
 #include <fileReader.h>
+#include <fileoperation.h>
 
 #define      RUNNING            1
 #define      NOT_RUNNING        0

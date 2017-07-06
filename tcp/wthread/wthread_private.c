@@ -1,5 +1,7 @@
 #include "wthread_private.h"
 
+#include <string.h>
+
 #define    MAX_SIZE_WTHREAD             (50)
 #define    WTHREAD_PRIVATED_USED        (1)
 

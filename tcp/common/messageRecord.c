@@ -38,24 +38,29 @@ MessageRecord* malloc_record(unsigned cseq, MessageType messageType, char const*
 {
 	if(len <= 0 || !contentStr)
 		return NULL;
-	
-	MessageRecord *record = malloc(sizeof(MessageRecord));
-	if(!record)
-	{
-		return NULL;
-	}
-	
-	record->fContentStr = malloc(sizeof(char) * (len + 1));
-	if(record->fContentStr == NULL)
-	{
-		free(record);
-		record = NULL;
-	}
-	
-	strncpy(record->fContentStr, contentStr ,len);
-	record->fCSeq = cseq;
-	record->messageType = messageType;
-	record->mLen  = len;
-	
+
+    MessageRecord *record = NULL;
+    do
+    {
+    	record = malloc(sizeof(MessageRecord));
+    	if(!record)
+    	{
+    		return NULL;
+    	}
+    	
+    	record->fContentStr = malloc(sizeof(char) * (len + 1));
+    	if(record->fContentStr == NULL)
+    	{
+    		free(record);
+    		record = NULL;
+            break;
+    	}
+    	
+    	strncpy(record->fContentStr, contentStr ,len);
+    	record->fCSeq = cseq;
+    	record->messageType = messageType;
+    	record->mLen  = len;
+    }while(0);
+    
 	return record;
 }

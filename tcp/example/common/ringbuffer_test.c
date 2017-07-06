@@ -1,8 +1,11 @@
-#include <ringbuffer.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
+
+#include <ringbuffer.h>
+#include <fileoperation.h>
+
 
 pthread_t  pid;
 PT_RingBuffer ringbuf = NULL;
@@ -31,7 +34,7 @@ int main()
 
 	ringbuf = mallocRingBuffer(10);
 
-	printf("sizeof(tmp) =%d\r\n",sizeof(tmp));
+	printf("sizeof(tmp) =%d\r\n", (int)sizeof(tmp));
 
 	
 	ret = pthread_create(&pid,NULL,do_ringbuffer_test_thread,ringbuf);

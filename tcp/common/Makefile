@@ -4,7 +4,7 @@ OBJS:= messageQueue.o messageRecord.o fileReader.o fileWriter.o ringbuffer.o fil
 	$(CC) -g -c $^
 	
 %.o : %.c
-	$(CC) -g -fPIC $(CFLAGS) $(CFLAGS2) -c $^
+	$(CC) -g -fPIC  $(CFLAGS2) -c $^
 
 
 TARGET:=libcommon.so
