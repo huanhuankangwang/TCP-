@@ -60,17 +60,20 @@ int main(int argc,char **argv)
 	char  ip[20]={0};
 	PT_FileSender   sender = NULL;
 	PT_FileReceiver recv   = NULL;
-	char  *senderfilename = argv[1];
-	char  *recvfilename   = argv[2];
+	char  senderfilename[20] = "0.jpg";
+	char  recvfilename[20]  =  "1.jpg";
 	int   bindport = 12345;
 	int   port     = 13245;
 	
-	if(argc != 3)
-	{
-		print_usage();
-		return 0;
-	}
-
+    switch(argc)
+    {
+        case 3:
+            strcpy(senderfilename,argv[1]);
+            strcpy(recvfilename,argv[2]);
+            break;
+        default:
+            break;
+    }
 	if(getLocalIp(ip) != 0 )
 	{
 		printf("get local ip err\r\n");
