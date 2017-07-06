@@ -11,7 +11,7 @@ export CFLAGS CFLAGS2 CC LD HOME_PATH_INCLUDE HOME_PATH_LIBS
 
 LIBS_TARGET:= libwthread.so libcommon.so libwtftp.so
 	
-all:
+all:clean rm_libs libs
 	make -C example
 
 libs:$(LIBS_TARGET)
@@ -29,6 +29,9 @@ clean:
 	make clean -C wtftp
 	make clean -C wthread
 	make clean -C example
+
+rm_libs:
+	rm lib/* -rf
 	
 testapp:
 	make  -C example

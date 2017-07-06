@@ -69,7 +69,7 @@ PT_FileWriter openFileWriter(const char* filename,int bufSize)
 
 	do
 	{
-		writer = malloc(sizeof(T_FileWriter));
+		writer = (PT_FileWriter)malloc(sizeof(T_FileWriter));
 		if(!writer)
 		{
 			break;

@@ -14,10 +14,11 @@ PT_RingBuffer mallocRingBuffer(int len)
 {
 	if(len < MIN_SIZE_RINGBUF)
 		len = MIN_SIZE_RINGBUF;
-	PT_RingBuffer buf = malloc(sizeof(T_RingBuffer));
+	PT_RingBuffer buf = NULL;
 
 	do
 	{
+	    buf = (PT_RingBuffer)malloc(sizeof(T_RingBuffer));
 		if(!buf)
 			break;
 		buf->mBuf = malloc(sizeof(char) *(len+1));

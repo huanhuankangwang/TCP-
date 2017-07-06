@@ -36,16 +36,15 @@ int free_record(MessageRecord *record)
 
 MessageRecord* malloc_record(unsigned cseq, MessageType messageType, char const* contentStr,int len)
 {
-	if(len <= 0 || !contentStr)
-		return NULL;
-
     MessageRecord *record = NULL;
     do
     {
-    	record = malloc(sizeof(MessageRecord));
+        if(len <= 0 || !contentStr)
+            break;
+        record = (MessageRecord*)malloc(sizeof(MessageRecord));
     	if(!record)
     	{
-    		return NULL;
+    		break;
     	}
     	
     	record->fContentStr = malloc(sizeof(char) * (len + 1));

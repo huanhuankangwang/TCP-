@@ -24,6 +24,7 @@ void *do_fileSender_thread(void*arg)
 	{
 		{
             memset((void*)tmp ,0,sizeof(tmp));
+            printf(" readFileReader \r\n");
 			ret  = readFileReader(sender->filereader,tmp,sizeof(tmp));
 			if(ret <  0)
 	       	{
@@ -34,8 +35,10 @@ void *do_fileSender_thread(void*arg)
 		   	}
 		}
 
+        
 		len  = ret;
 		ret = writeSender(sender->sender,tmp,len);
+        printf("writeSender len =%d  ret =%d\r\n",len,ret);
 		if(ret <0)
 		{
 			break;
@@ -58,7 +61,7 @@ PT_FileSender openFileSender(char *filename,char *remoteIp,int port,int bindport
 	PT_FileSender  sender = NULL;
 	do
 	{
-		sender  = malloc(sizeof(T_FileSender));
+		sender  = (PT_FileSender)malloc(sizeof(T_FileSender));
 		if(!sender)
 			break;
 		sender->filereader = openFileReader(filename,1024*20);

@@ -161,7 +161,7 @@ int client_tcp_recv(unsigned char *buf, int size)
 PT_Service_List service_malloc()
 {
 	PT_Service_List plist = NULL;
-	plist = (PT_Service_List*)malloc( sizeof(T_Service_List));
+	plist = (PT_Service_List)malloc( sizeof(T_Service_List));
 	if(plist)
 		plist->next = NULL;
 	return plist;

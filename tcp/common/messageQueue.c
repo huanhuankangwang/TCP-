@@ -24,7 +24,7 @@ int init_messageQueue(MessageQueue *queue)
 
 MessageQueue *malloc_messageQueue()
 {
-	MessageQueue *queue = malloc(sizeof(MessageQueue));
+	MessageQueue *queue = (MessageQueue*)malloc(sizeof(MessageQueue));
 	if(queue)
 	{
 	    memset(queue,0,sizeof(MessageQueue));

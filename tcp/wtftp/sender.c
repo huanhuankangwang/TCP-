@@ -44,7 +44,6 @@ static int sender_receive(PT_Sender sender,BusMsg * msg)
 	return receive_busMsg(sender->sockfd , msg);
 }
 
-
 static void *do_sender_thread(void*arg)
 {
 	BusMsg		msg;
@@ -67,7 +66,6 @@ static void *do_sender_thread(void*arg)
 					printf("receive replay_ok type=%s msgdata=%s\r\n",msg.msgType,msg.msgData);
 					printf("this way msg.mCseq =%d\r\n",msg.mCseq);
 					record = removeOneByCseq(&sender->queue, msg.mCseq);
-					printf("this way record =%p\r\n",record);
 					if(record)
 					{
 						printf("removeOneByCseq \r\n");
@@ -88,11 +86,11 @@ static void *do_sender_thread(void*arg)
 		{
 			sender_send(sender,record->fContentStr,record->mLen,record->fCSeq);
 
-			putAtHead(&sender->queue,record);
-			//enqueue(&sender->queue,record);//继续放入其中 直到被读出为止
+			//putAtHead(&sender->queue,record);
+			enqueue(&sender->queue,record);//继续放入其中 直到被读出为止
 		}else{
 			//历史中没有记录 所以阻塞在这里等待 新记录
-			pthread_cond_wait(&sender->cond,&sender->mutex);
+			//pthread_cond_wait(&sender->cond,&sender->mutex);
 		}
 		pthread_mutex_unlock(&sender->mutex);		
 		
@@ -115,7 +113,7 @@ PT_Sender openSender(char *remoteIp,int remotePort,int bindport)
 	{
 		if(remoteIp == NULL)
 			break;
-		sender = malloc(sizeof(T_Sender));
+		sender = (PT_Sender)malloc(sizeof(T_Sender));
 		if(!sender)
 			break;
 		memset(sender,0,sizeof(T_Sender));
@@ -156,7 +154,8 @@ PT_Sender openSender(char *remoteIp,int remotePort,int bindport)
 		sender->isRunning  = RUNNING;
 		sender->port	   = remotePort;
 		sender->cseq	   = 0;
-		strncpy(sender->remoteIp,remoteIp,MAX_REMOTE_IP_LEN);		
+		strncpy(sender->remoteIp,remoteIp,MAX_REMOTE_IP_LEN);
+        printf("sender ip:%s port:%d  sockfd:%d\r\n",sender->remoteIp,bindport,sender->sockfd);
 	}while(0);
 	
 	return sender;
@@ -234,7 +233,7 @@ int writeSender(PT_Sender sender,char *cmd,int len)
         printf("sebder -> \r\n");
 		pthread_mutex_lock(&sender->mutex);
 		//唤醒
-		pthread_cond_signal(&sender->cond);
+		//pthread_cond_signal(&sender->cond);
 		pthread_mutex_unlock(&sender->mutex);
 	}while(0);
 

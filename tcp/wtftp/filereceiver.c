@@ -18,10 +18,10 @@ static void *do_filereceiver_thread(void*arg)
 	do
 	{
 		ret = readReceiver(recv->receiver,tmp,sizeof(tmp));
-		//EB_LOGE("readReceiver =%d\r\n",ret);
 		len  = ret;
-		if(ret >0)
+		if(len >0)
 		{
+		    printf("writeFileWriter =%d\r\n",ret);
 			ret = writeFileWriter(recv->writer,tmp,len);
 			if(ret != len)
 			{
@@ -79,7 +79,7 @@ PT_FileReceiver openFileReceiver(const char * filename,const char * remoteIp,
 		EB_LOGE("openFileReceiver \r\n");
 
 		ret = pthread_create(&recv->pid,NULL,do_filereceiver_thread,recv);
-		if(ret <0)
+		if(ret != 0)
 		{
 			closeReceiver(recv->receiver);
 			recv->receiver = NULL;

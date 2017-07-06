@@ -263,27 +263,27 @@ int receive_busMsg(int nSocketFd, BusMsg *data)
 	int  nRecvLen;
 	int nAddrLen;
 	struct sockaddr_in recvAddr;
-	char acData[BUS_FRAME_MIN_LEN+BUS_MSGDATA_MAX_LEN];
+	char acData[BUS_FRAME_MIN_LEN+BUS_MSGDATA_MAX_LEN + 1];
 	int contentLen = 0;
 	int ret;
 
 	nAddrLen = sizeof(recvAddr);
 
 	do {
-		nRecvLen = recvfrom(nSocketFd, acData, sizeof(acData), 0, (struct sockaddr *)(&recvAddr), &nAddrLen);
+		nRecvLen = recvfrom(nSocketFd, acData, (BUS_FRAME_MIN_LEN+BUS_MSGDATA_MAX_LEN) , 0, (struct sockaddr *)(&recvAddr), &nAddrLen);
 
 		if(nRecvLen > 0) {
 			BusAddr addr;
 
 			memset((void *)&addr, 0, sizeof(addr));
-			strcpy(addr.ip, (char* )inet_ntoa(recvAddr.sin_addr));
+			//strcpy(addr.ip, (char* )inet_ntoa(recvAddr.sin_addr));
 			addr.port = ntohs(recvAddr.sin_port);
 
 			memset((void *)data, 0, sizeof(BusMsg));
 			ret = ctrl_decompose_frame(acData, nRecvLen, data);
 			if(!ret)
 				contentLen = data->msgDataSize;
-			EB_LOGE("cseq =%d,msgtype=%s\r\n",data->mCseq,data->msgType);
+			//EB_LOGE("cseq =%d,msgtype=%s\r\n",data->mCseq,data->msgType);
 			//EB_LOGE( "recvAddr:%s:%d, ret =%d \r\n", addr.ip, addr.port,ret);
 		}
 
@@ -327,7 +327,7 @@ static int send_(int sockfd,char *ip, int port, char *cmd, int cmd_len)
 int send_busMsg(int sockfd,BusMsg *msg)
 {
 	int ret;
-	char  frame[BUS_FRAME_MIN_LEN + BUS_MSGDATA_MAX_LEN ];
+	char  frame[BUS_FRAME_MIN_LEN + BUS_MSGDATA_MAX_LEN + 10];
 	ret = ctrl_compose_frame(msg , frame);
 	if( ret <= 0 )
 	{

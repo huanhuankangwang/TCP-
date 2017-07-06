@@ -62,8 +62,8 @@ int main(int argc,char **argv)
 	PT_FileReceiver recv   = NULL;
 	char  senderfilename[20] = "0.jpg";
 	char  recvfilename[20]  =  "1.jpg";
-	int   bindport = 12345;
-	int   port     = 13245;
+	int   bindport = 3451;
+	int   port     = 4531;
 	
     switch(argc)
     {
@@ -83,6 +83,7 @@ int main(int argc,char **argv)
 	printf("ip =%s \r\n",ip);
 
 	create_file(recvfilename);
+
 	
 	recv  = openFileReceiver(recvfilename,ip,port,bindport);
 	if(!recv)
@@ -90,7 +91,7 @@ int main(int argc,char **argv)
 		closeFileSender( sender);
 		return 0;
 	}
-	
+
 	sender = openFileSender(senderfilename,ip,bindport,port);
 	if(!sender)
 	{

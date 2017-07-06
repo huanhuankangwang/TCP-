@@ -18,6 +18,7 @@ typedef struct _sender{
 	char			remoteIp[MAX_REMOTE_IP_LEN];
 
 	pthread_t 		pid;
+    pthread_t       reply_pid;
 	pthread_cond_t	cond;
 	pthread_mutex_t mutex;
 

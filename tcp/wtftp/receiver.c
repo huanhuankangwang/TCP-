@@ -55,8 +55,6 @@ static void *do_receive_thread(void*arg)
 
 	do
 	{
-
-		
 		memset(&msg,0 ,sizeof(BusMsg));
 		//½ÓÊÕ
 		if ( receiver_receive(recv,&msg) >0)
@@ -88,10 +86,10 @@ PT_Receiver openReceiver(const char *remoteIp,int port,int bindPort)
 
 	do
 	{
-		if(remoteIp == NULL)
+		if(!remoteIp)
 			break;
 		
-		recv = malloc(sizeof(T_Receiver));
+		recv = (PT_Receiver)malloc(sizeof(T_Receiver));
 		if(!recv)
 			break;
 		memset(recv,0 , sizeof(T_Receiver));
@@ -135,6 +133,8 @@ PT_Receiver openReceiver(const char *remoteIp,int port,int bindPort)
 		recv->port	   =  port;
 		recv->cseq	   = 0;
 		strncpy(recv->remoteIp,remoteIp,MAX_REMOTE_IP_LEN);
+
+        printf("receive ip:%s port:%d sockfd =%d\r\n",recv->remoteIp,bindPort,recv->sockfd);
 	}while(0);
 
 	EB_LOGE("openReceiver \r\n");
