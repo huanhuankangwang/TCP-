@@ -107,6 +107,7 @@ PT_Sender openSender(char *remoteIp,int remotePort,int bindport)
 	int  ret = 0;
 	PT_Sender  sender = NULL;
 	int flags;
+    int on = 1;
 	struct sockaddr_in servAddr;
 
 	do
@@ -123,6 +124,14 @@ PT_Sender openSender(char *remoteIp,int remotePort,int bindport)
 			sender = NULL;
 			break;
 		}
+
+        if((setsockopt(sender->sockfd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on)))<0)  
+        {  
+			free(sender);
+			sender = NULL;            
+            perror("setsockopt failed");
+            break;
+        }
 
 		/*bind*/
 		memset(&servAddr, 0, sizeof(servAddr));
@@ -230,7 +239,6 @@ int writeSender(PT_Sender sender,char *cmd,int len)
 
 		sender_send(sender,cmd,len ,sender->cseq++);
 		enqueue(&sender->queue,record);
-        printf("sebder -> \r\n");
 		pthread_mutex_lock(&sender->mutex);
 		//»½ÐÑ
 		//pthread_cond_signal(&sender->cond);

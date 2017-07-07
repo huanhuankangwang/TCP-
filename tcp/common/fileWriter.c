@@ -140,9 +140,10 @@ int closeFileWriter(PT_FileWriter writer)
 }
 
 //不对外部开放的接口
-int readFileWriter(PT_FileWriter writer,char *str,int maxsize)
+int readFileWriter(PT_FileWriter writer,char *str,int size)
 {
-	int  ret = 0,size = maxsize;
+	int  ret = 0;
+    int  readsize = 0;
 
     while(size > 0)
     {
@@ -152,16 +153,22 @@ int readFileWriter(PT_FileWriter writer,char *str,int maxsize)
        {
        	   FILE_WRITER_DEBUG("readFileWriter wait for data\r\n");
            //阻塞在这里
-           pthread_cond_wait(&writer->cond,&writer->mutex);
+           
            if(!IS_RUNNING(writer))
              break;
+           if(readsize)
+                break;
+           
+           pthread_cond_wait(&writer->cond,&writer->mutex);
        }
+
+       readsize += ret;
 	   FILE_WRITER_DEBUG("readFileWriter wait for data ret =%d\r\n",ret);
        size  -= ret;
        str  += ret;
     }
 
-    return maxsize - size;
+    return readsize;
 }
 
 

@@ -80,6 +80,7 @@ PT_Receiver openReceiver(const char *remoteIp,int port,int bindPort)
 	int  ret = 0;
 	PT_Receiver  recv = NULL;
 	int flags;
+    int on = 1;
 	struct sockaddr_in servAddr;
 
 	EB_LOGE("openReceiver \r\n");
@@ -108,6 +109,14 @@ PT_Receiver openReceiver(const char *remoteIp,int port,int bindPort)
 			recv = NULL;
 			break;
 		}
+
+        if((setsockopt(recv->sockfd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on)))<0)  
+        {  
+            perror("setsockopt failed");
+            free(recv);
+			recv = NULL;
+            break;
+        }
 
 		/*bind*/
 		memset(&servAddr, 0, sizeof(servAddr));
