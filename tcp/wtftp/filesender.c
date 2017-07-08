@@ -47,15 +47,18 @@ void *do_fileSender_thread(void*arg)
 	}while(sender->isRunning == RUNNING);
 
 //等待这两个线程退出
-	if(sender->filereader)
-		pthread_join(sender->filereader->pid,NULL);
-	if(sender->sender)
-		pthread_join(sender->sender->pid,NULL);
+	//等待 发送端退出
+	printf("filesender senderJoin1\r\n");
+	SenderJoin(sender->sender);
+	printf("filesender senderJoin2\r\n");
+	closeSender(sender->sender);
+	printf("filesender closeSender\r\n");
+	sender->sender = NULL;
 	sender->flag      = FLAG_NOT_VALID;
 	sender->isRunning = RUNNING_QUIT;
 }
 
-PT_FileSender openFileSender(char *filename,char *remoteIp,int port,int bindport)
+PT_FileSender openFileSender(char *filename,char *remoteIp,int port,int bindport,int filesize)
 {
 	int ret;
 	PT_FileSender  sender = NULL;
@@ -72,7 +75,8 @@ PT_FileSender openFileSender(char *filename,char *remoteIp,int port,int bindport
 			break;
 		}
 
-		sender->sender = openSender(remoteIp,port,bindport);
+		
+		sender->sender = openSender(remoteIp,port,bindport,filesize);
 		if(!sender->sender)
 		{
 			closeFileReader(sender->filereader);
@@ -83,7 +87,7 @@ PT_FileSender openFileSender(char *filename,char *remoteIp,int port,int bindport
 		}
 
 		ret = pthread_create(&sender->pid,NULL,do_fileSender_thread,(void*)sender);
-		if(ret < 0)
+		if(ret != 0)
 		{
 			closeSender(sender->sender);
 			sender->sender = NULL;
@@ -91,7 +95,7 @@ PT_FileSender openFileSender(char *filename,char *remoteIp,int port,int bindport
 			sender->filereader = NULL;
 			free(sender);
 			sender = NULL;
-			break;			
+			break;
 		}
 
 		//pthread_mutex_init(&sender->mutex, NULL);
@@ -143,5 +147,11 @@ int closeFileSender(PT_FileSender sender)
 		sender = NULL;
 
 	}	
+}
+
+int FileSenderJoin(PT_FileSender filesender)
+{
+	pthread_join(filesender->pid,NULL);
+	return 0;
 }
 

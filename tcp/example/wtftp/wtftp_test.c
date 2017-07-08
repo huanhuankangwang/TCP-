@@ -40,7 +40,7 @@ int getLocalIp(char *localIp)
     }  
      
     memset(&ifr_ip, 0, sizeof(ifr_ip));
-    strncpy(ifr_ip.ifr_name, "ens32", sizeof(ifr_ip.ifr_name) - 1);
+    strncpy(ifr_ip.ifr_name, "eth0", sizeof(ifr_ip.ifr_name) - 1);
    
     if( ioctl( sockfd, SIOCGIFADDR, &ifr_ip) < 0 )     
     {     
@@ -64,6 +64,7 @@ int main(int argc,char **argv)
 	char  recvfilename[20]  =  "1.jpg";
 	int   bindport = 3451;
 	int   port     = 4531;
+	int   filesize = 0;
 	
     switch(argc)
     {
@@ -84,25 +85,28 @@ int main(int argc,char **argv)
 
 	create_file(recvfilename);
 
-	
-	recv  = openFileReceiver(recvfilename,ip,port,bindport);
+	filesize = getFileSize(senderfilename);
+
+	recv  = openFileReceiver(recvfilename,ip,port,bindport,filesize);
 	if(!recv)
 	{
-		closeFileSender( sender);
 		return 0;
 	}
 
-	sender = openFileSender(senderfilename,ip,bindport,port);
+	sender = openFileSender(senderfilename,ip,bindport,port,filesize);
 	if(!sender)
 	{
+		closeFileReceiver( recv);
 		return 0;
 	}
 
-	while(1);
-
-
+	//等待这两个退出
+	FileSenderJoin(sender);
+	FileReceiverJoin(recv);
 
 	closeFileReceiver(recv);
+	recv = NULL;
 	closeFileSender( sender);
+	sender = NULL;
 	return 0;
 }

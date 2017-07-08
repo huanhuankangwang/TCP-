@@ -161,25 +161,27 @@ int closeFileReader(PT_FileReader reader)
 
 int readFileReader(PT_FileReader reader,char *str,int maxsize)
 {
-	int  ret = 0,size = maxsize;
+	int  ret = 0,size = 0;
 
     FILE_READER_DEBUG("lock in readFileReader\r\n");
 	pthread_mutex_lock(&reader->mutex);
 
-    while(size > 0)
+    while(maxsize > 0)
     {
-       ret = readString(reader->ringbuf,str,size);
+       ret = readString(reader->ringbuf,str,maxsize);
        if(ret <= 0)
        {
            FILE_READER_DEBUG("in readFileReader ret = %d running =%d flag = %d \r\n",ret,reader->isRunning,reader->flag);
-		   if(isEof(reader) && (maxsize-size <= 0) )
+		   if(isEof(reader) && (size <= 0) )
 		   {
 		   		return -1;//是文件结束，并且是不在运行
 		   }
 		   
 		   break;
        }
-       size  -= ret;
+
+	   size += ret;
+       maxsize -= ret;
        str  += ret;
     }
 
@@ -187,6 +189,6 @@ int readFileReader(PT_FileReader reader,char *str,int maxsize)
     FILE_READER_DEBUG("unlock in readFileReader\r\n");
     pthread_mutex_unlock(&reader->mutex);
 
-    return maxsize -size;
+    return size;
 }
 

@@ -18,30 +18,34 @@ static void *do_filereceiver_thread(void*arg)
 	do
 	{
 		ret = readReceiver(recv->receiver,tmp,sizeof(tmp));
-		len  = ret;
-		if(len >0)
+		if(ret >0)
 		{
-		    printf("writeFileWriter =%d\r\n",ret);
+			len  = ret;
 			ret = writeFileWriter(recv->writer,tmp,len);
 			if(ret != len)
 			{
 				break;
 			}
+		}else if(ret < 0)
+		{
+			break;//准备退出
 		}
 	}while(recv->isRunning == RUNNING);
 
+	if(recv->receiver)
+		pthread_join(recv->receiver->pid,NULL);
+	closeReceiver(recv->receiver);
+	recv->receiver = NULL;
+	
+	closeFileWriter(recv->writer);
+	recv->writer = NULL;
 	//等待这两个线程退出
-		if(recv->writer)
-			pthread_join(recv->writer->pid,NULL);
-		if(recv->receiver)
-			pthread_join(recv->receiver->pid,NULL);
-
 	recv->isRunning = RUNNING_QUIT;
 	recv->flag      = FLAG_NOT_VALID;
 }
 
 PT_FileReceiver openFileReceiver(const char * filename,const char * remoteIp,
-		int port,int bindPort)
+		int port,int bindPort,int filesize)
 {
 	PT_FileReceiver recv = NULL;
 	int  ret;
@@ -66,7 +70,7 @@ PT_FileReceiver openFileReceiver(const char * filename,const char * remoteIp,
 		}
 		EB_LOGE("openFileReceiver \r\n");
 
-		recv->receiver = openReceiver(remoteIp,port,bindPort);
+		recv->receiver = openReceiver(remoteIp,port,bindPort,filesize);
 		if(!recv->receiver)
 		{
 			closeFileWriter(recv->writer);
@@ -117,5 +121,10 @@ int closeFileReceiver(PT_FileReceiver recv)
 	recv = NULL;
 
 	return 0;
+}
+
+int FileReceiverJoin(PT_FileReceiver  recv)
+{
+	pthread_join(recv->pid,NULL);
 }
 

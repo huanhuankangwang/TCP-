@@ -22,6 +22,28 @@ int init_messageQueue(MessageQueue *queue)
 	}
 }
 
+int deinit_messageQueue(MessageQueue *queue)
+{
+	if(queue)
+	{
+	    pthread_mutex_lock(&queue->cond_lock);
+		MessageRecord * tail = queue->fHead;
+		MessageRecord * temp = NULL;
+		while(tail)
+		{
+			temp = tail->fNext;
+			free_record(tail);
+			tail = temp;
+		}
+
+		queue->mLen  = 0;
+		queue->fHead = NULL;
+		queue->fTail = NULL;
+		pthread_mutex_unlock(&queue->cond_lock);
+		pthread_mutex_destroy(&queue->cond_lock); 
+	}
+}
+
 MessageQueue *malloc_messageQueue()
 {
 	MessageQueue *queue = (MessageQueue*)malloc(sizeof(MessageQueue));

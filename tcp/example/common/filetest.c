@@ -5,20 +5,28 @@
 #include <fileoperation.h>
 
 
-#define   readfile  "0.jpg"
-#define   outfile   "1.jpg"
+#define   READ_FILE  "0.jpg"
+#define   OUT_FILE   "1.jpg"
 
 #define  BUFFSIZE   (1024*20)
 
 #define    USING_READER         1
 #define    USING_WRITE          1
 
-int main()
+int main(int argc ,char **argv)
 {
     int ret;
     char  tmp[1024];
     PT_FileReader reader = NULL;
     PT_FileWriter writer = NULL;
+
+	char readfile[100] = READ_FILE;
+	char outfile[100]  = OUT_FILE;
+	if( argc == 3)
+	{
+		strcpy(readfile,argv[1]);
+		strcpy(outfile,argv[2]);
+	}
 
     if( create_file(outfile))
         return 1;

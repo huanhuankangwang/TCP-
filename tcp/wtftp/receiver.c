@@ -44,6 +44,44 @@ static int receiver_receive(PT_Receiver recv,BusMsg * msg)
 	return receive_busMsg(recv->sockfd , msg);
 }
 
+PT_Receiver malloc_receiver(const char *remoteIp,int port,int bindPort,int size)
+{
+	PT_Receiver  recv = NULL;
+	do
+	{
+		if(!remoteIp)
+			break;
+		recv = (PT_Receiver)malloc(sizeof(T_Receiver));
+		if(!recv)
+			break;
+		memset(recv,0 , sizeof(T_Receiver));
+		init_messageQueue(&recv->queue);
+		pthread_mutex_init(&recv->mutex, NULL);
+		pthread_cond_init(&recv->cond,NULL);
+		recv->flag		   = FLAG_VALID;
+		recv->isRunning  = RUNNING;
+		recv->port	   =  port;
+		recv->cseq	   = 0;
+		recv->mRecvSize= size;
+		strncpy(recv->remoteIp,remoteIp,MAX_REMOTE_IP_LEN);
+	}while(0);
+
+	return recv;
+}
+
+int free_receiver(PT_Receiver recv)
+{
+	if(recv)
+	{
+		pthread_mutex_destroy(&recv->mutex);
+		pthread_cond_destroy(&recv->cond);
+		deinit_messageQueue(&recv->queue);
+		memset(recv,0,sizeof(T_Receiver));
+		free(recv);
+		recv = NULL;		
+	}
+}
+
 static void *do_receive_thread(void*arg)
 {
 	PT_Receiver recv = (PT_Receiver)arg;
@@ -53,6 +91,8 @@ static void *do_receive_thread(void*arg)
 	BusMsg  msg;
 	int ret;
 
+	wsignal();
+	
 	do
 	{
 		memset(&msg,0 ,sizeof(BusMsg));
@@ -75,7 +115,7 @@ static void *do_receive_thread(void*arg)
 	recv->flag      = FLAG_NOT_VALID;
 }
 
-PT_Receiver openReceiver(const char *remoteIp,int port,int bindPort)
+PT_Receiver openReceiver(const char *remoteIp,int port,int bindPort,int size)
 {
 	int  ret = 0;
 	PT_Receiver  recv = NULL;
@@ -86,34 +126,27 @@ PT_Receiver openReceiver(const char *remoteIp,int port,int bindPort)
 	EB_LOGE("openReceiver \r\n");
 
 	do
-	{
-		if(!remoteIp)
-			break;
-		
-		recv = (PT_Receiver)malloc(sizeof(T_Receiver));
+	{	
+		recv = malloc_receiver(remoteIp,port,bindPort,size);
 		if(!recv)
 			break;
-		memset(recv,0 , sizeof(T_Receiver));
-
-		ret = pthread_create(&recv->pid,NULL,do_receive_thread,(void*)recv);
-	    if(ret!=0)  
-	    {
-			free(recv);
-			recv = NULL;
-			break;
-	    }
 
 		if((recv->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
 		{
-			free(recv);
+			free_receiver(recv);
 			recv = NULL;
 			break;
 		}
 
+		/*设置为非阻塞*/
+		flags = fcntl(recv->sockfd , F_GETFL , 0);
+		fcntl(recv->sockfd,F_SETFL,flags|O_NONBLOCK);
+		
+		/*设置端口复用*/
         if((setsockopt(recv->sockfd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on)))<0)  
         {  
             perror("setsockopt failed");
-            free(recv);
+            free_receiver(recv);
 			recv = NULL;
             break;
         }
@@ -127,21 +160,19 @@ PT_Receiver openReceiver(const char *remoteIp,int port,int bindPort)
 		{
 			printf("wangkang bind error: %d, %s", ret, strerror(errno));
 			close(recv->sockfd);
-			free(recv);
+			free_receiver(recv);
 			recv = NULL;		
 			break;
 		}
 
-		flags = fcntl(recv->sockfd , F_GETFL , 0);
-		fcntl(recv->sockfd,F_SETFL,flags|O_NONBLOCK);//设置为非阻塞
-		init_messageQueue(&recv->queue);
-		pthread_mutex_init(&recv->mutex, NULL);
-		pthread_cond_init(&recv->cond,NULL);
-		recv->flag   	   = FLAG_VALID;
-		recv->isRunning  = RUNNING;
-		recv->port	   =  port;
-		recv->cseq	   = 0;
-		strncpy(recv->remoteIp,remoteIp,MAX_REMOTE_IP_LEN);
+		ret = pthread_create(&recv->pid,NULL,do_receive_thread,(void*)recv);
+	    if(ret != 0)  
+	    {
+	    	close(recv->sockfd);
+			free_receiver(recv);
+			recv = NULL;
+			break;
+	    }
 
         printf("receive ip:%s port:%d sockfd =%d\r\n",recv->remoteIp,bindPort,recv->sockfd);
 	}while(0);
@@ -169,12 +200,9 @@ int closeReceiver(PT_Receiver recv)
 			}//等待退出成功
 		}
 
-		//pthread_kill(tid, SIGTERM); //强制杀死
-		pthread_mutex_destroy(&recv->mutex);
-		pthread_cond_destroy(&recv->cond);
 		close(recv->sockfd);
-		free_messageQueue(&recv->queue);
-		free(recv);
+		//pthread_kill(tid, SIGTERM); //强制杀死
+		free_receiver(recv);
 		recv = NULL;
 	}
 
@@ -186,12 +214,21 @@ int readReceiver(PT_Receiver recv,const char *cmd,int maxsize)
 	int ret = 0;
 	MessageRecord  *record =NULL;
 
+	if(recv->mRecvSize <= 0)
+	{
+		recv->isRunning = NOT_RUNNING;
+		return -1;
+	}
+
 	record = removeOneByCseq(&recv->queue , recv->cseq);
 	if(record)
 	{
+		//printf("readReceiver cseq =%d\r\n",recv->cseq);
 		recv->cseq++;
 		ret = record->mLen > maxsize ? maxsize : record->mLen;
 		strncpy(cmd,record->fContentStr, ret);
+
+		recv->mRecvSize -= ret;
 		free_record(record);
 		record = NULL;
 	}
@@ -203,3 +240,8 @@ int readReceiver(PT_Receiver recv,const char *cmd,int maxsize)
 	return ret;
 }
 
+
+int receiverJoin(PT_Receiver recv)
+{
+	pthread_join(recv->pid,NULL);
+}

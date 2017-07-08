@@ -17,6 +17,7 @@ typedef struct
 	int 			flag;
 	int				port;
 	int 			cseq;//当前处理的 cseq
+	int 			mRecvSize;//待接收的大小
 	
 	char			remoteIp[MAX_REMOTE_IP_LEN];
 
@@ -26,9 +27,14 @@ typedef struct
 }T_Receiver,*PT_Receiver;
 
 
-PT_Receiver openReceiver(const char *remoteIp,int port,int bindPort);
+PT_Receiver openReceiver(const char *remoteIp,int port,int bindPort,int size);
 int closeReceiver(PT_Receiver recv);
 
+
+/*返回值 >=0  实际读取的长度*/
+/*返回值 <0   读到了结束符*/
 int readReceiver(PT_Receiver recv,const char *cmd,int maxsize);
+int receiverJoin(PT_Receiver recv);
+
 
 #endif //_RECEIVER_H_

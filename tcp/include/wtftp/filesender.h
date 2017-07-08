@@ -19,7 +19,9 @@ typedef struct _FileSender{
 }T_FileSender,*PT_FileSender;
 
 
-PT_FileSender openFileSender(char *filename,char *remoteIp,int port,int bindport);
+PT_FileSender openFileSender(char *filename,char *remoteIp,int port,int bindport,int filesize);
 int closeFileSender(PT_FileSender filesender);
+
+int FileSenderJoin(PT_FileSender filesender);
 
 #endif//_FILE_SENDER_H_

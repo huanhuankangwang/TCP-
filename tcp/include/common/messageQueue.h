@@ -17,6 +17,8 @@ typedef struct _MessageQueue
 
 
 int init_messageQueue(MessageQueue *queue);
+int deinit_messageQueue(MessageQueue *queue);
+
 MessageQueue *malloc_messageQueue();
 int free_messageQueue(MessageQueue *queue) ;
 void enqueue(MessageQueue *queue,MessageRecord* record);

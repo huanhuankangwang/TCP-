@@ -11,13 +11,16 @@ typedef struct _sender{
 	MessageQueue    queue;//存放发送的记录
 	int    			sockfd;
 	int             isRunning;
+	int				mSenderIsRunning;
 	int 			flag;
 	int				port;
 	int 			cseq;
+
+	int 			mSize;
 	
 	char			remoteIp[MAX_REMOTE_IP_LEN];
 
-	pthread_t 		pid;
+	pthread_t 		send_pid;
     pthread_t       reply_pid;
 	pthread_cond_t	cond;
 	pthread_mutex_t mutex;
@@ -27,8 +30,9 @@ typedef struct _sender{
 }T_Sender,*PT_Sender;
 
 
-PT_Sender openSender(char *remoteIp,int remotePort,int bindport);
+PT_Sender openSender(char *remoteIp,int remotePort,int bindport,int filesize);
 int 	closeSender(PT_Sender sender);
+int 	SenderJoin(PT_Sender sender);
 int writeSender(PT_Sender sender,char *cmd,int len);
 
 #endif//_SENDER_H_

@@ -24,6 +24,6 @@ int read_line(int fd,const char *buf,int maxsize);
 
 int create_file(const char *filename);
 
-long getFileSize(const char *filename);
+int getFileSize(const char *filename);
 long getCurPos(int fd);
 #endif//_FILE_OPERATION_H_

@@ -172,13 +172,12 @@ int read_line(int fd,const char *buf,int maxsize)
 	return len;
 }
 
-long getFileSize(const char *filename)
+int getFileSize(const char *filename)
 {
     struct stat statbuf;  
     stat(filename,&statbuf);  
-    int size = statbuf.st_size;  
-  
-    return size;
+
+	return statbuf.st_size;
 }
 
 long getCurPos(int fd)

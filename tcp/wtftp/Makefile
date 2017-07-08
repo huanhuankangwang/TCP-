@@ -1,4 +1,4 @@
-OBJS:= filereceiver.o filesender.o packet_frame.o receiver.o sender.o easy_common.o
+OBJS:= filereceiver.o filesender.o packet_frame.o receiver.o sender.o easy_common.o wsignal.o
 
 
 LOCAL_CFLASS:= -I$(HOME_PATH_INCLUDE)/wtftp/
