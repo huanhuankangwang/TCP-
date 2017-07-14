@@ -16,4 +16,7 @@ typedef struct wthread_private{
 int closeWthreadPrivate(int pid);
 PT_Wthread_Private isCanOpen();
 
+//是否存在该线程
+int isExistWthread(pthread_t pid);
+
 #endif//_WTHREAD_PRIVATE_H_

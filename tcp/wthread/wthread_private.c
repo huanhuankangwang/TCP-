@@ -45,4 +45,20 @@ PT_Wthread_Private isCanOpen()
     return NULL;
 }
 
+int isExistWthread(pthread_t pid)
+{
+    pthread_mutex_lock(&mutex);
+    void *wp = NULL;
+    int i = 0;
+    for(i=0;i< MAX_SIZE_WTHREAD;i++)
+    {
+        if( wthreadPrivate[i].pid == pid && wthreadPrivate[i].flags == WTHREAD_PRIVATED_USED )
+        {
+            return 0;
+        }
+    }
+    
+    pthread_mutex_unlock(&mutex);
+    return -1;
+}
 

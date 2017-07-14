@@ -69,22 +69,28 @@ pthread_t wthread_create(pthread_t *pid,const pthread_attr_t *attr,
 
 int wthread_close(pthread_t pid)
 {
-   if(pid < 0)
+   int ret = -1;
+   do
    {
-     return -1;
-   }
+       if(pid < 0)
+       {
+         return -1;
+       }
 
-   pthread_kill(pid,SIGQUIT);
+       if( isExistWthread(pid) != 0)
+            break;
+       pthread_kill(pid,SIGQUIT);
+       ret = 0;
+   }while(0);
+
    return 0;
 }
 
 int wthread_join(pthread_t pid)
 {
-    if(pid < 0)
-    {
-      return -1;
-    }
-
-    return pthread_join(pid,NULL);
+    if( isExistWthread(pid) == 0)
+        return pthread_join(pid,NULL);
+    
+    return -1;
 }
 
