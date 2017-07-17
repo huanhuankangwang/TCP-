@@ -32,7 +32,7 @@ static int receive_reply(PT_Receiver recv,char *cmd,int len,int Cseq)
 	strcpy(data.msgType , REPLY_MSG_TYPE);
 
 	data.msgDataSize  = len > BUS_MSGDATA_MAX_LEN ? BUS_MSGDATA_MAX_LEN : len ;
-	strncpy(data.msgData , cmd , data.msgDataSize);
+	memcpy(data.msgData , cmd , data.msgDataSize);
 	data.mode   = 0;
 	data.mCseq  = Cseq;
 	
@@ -63,7 +63,7 @@ PT_Receiver malloc_receiver(const char *remoteIp,int port,int bindPort,int size)
 		recv->port	   =  port;
 		recv->cseq	   = 0;
 		recv->mRecvSize= size;
-		strncpy(recv->remoteIp,remoteIp,MAX_REMOTE_IP_LEN);
+		memcpy(recv->remoteIp,remoteIp,MAX_REMOTE_IP_LEN);
 	}while(0);
 
 	return recv;
@@ -226,7 +226,7 @@ int readReceiver(PT_Receiver recv,const char *cmd,int maxsize)
 		//printf("readReceiver cseq =%d\r\n",recv->cseq);
 		recv->cseq++;
 		ret = record->mLen > maxsize ? maxsize : record->mLen;
-		strncpy(cmd,record->fContentStr, ret);
+		memcpy(cmd,record->fContentStr, ret);
 
 		recv->mRecvSize -= ret;
 		free_record(record);

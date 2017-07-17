@@ -55,7 +55,7 @@ MessageRecord* malloc_record(unsigned cseq, MessageType messageType, char const*
             break;
     	}
     	
-    	strncpy(record->fContentStr, contentStr ,len);
+    	memcpy(record->fContentStr, contentStr ,len);
     	record->fCSeq = cseq;
     	record->messageType = messageType;
     	record->mLen  = len;

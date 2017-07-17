@@ -40,7 +40,7 @@ int getLocalIp(char *localIp)
     }  
      
     memset(&ifr_ip, 0, sizeof(ifr_ip));
-    strncpy(ifr_ip.ifr_name, "eth0", sizeof(ifr_ip.ifr_name) - 1);
+    strncpy(ifr_ip.ifr_name, "ens32", sizeof(ifr_ip.ifr_name) - 1);
    
     if( ioctl( sockfd, SIOCGIFADDR, &ifr_ip) < 0 )     
     {     

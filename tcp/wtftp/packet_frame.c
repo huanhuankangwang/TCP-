@@ -285,10 +285,21 @@ int receive_busMsg(int nSocketFd, BusMsg *data)
 				contentLen = data->msgDataSize;
 			//EB_LOGE("cseq =%d,msgtype=%s\r\n",data->mCseq,data->msgType);
 			//EB_LOGE( "recvAddr:%s:%d, ret =%d \r\n", addr.ip, addr.port,ret);
+
+            break;
 		}
 
+        else if(nRecvLen < 0)
+        {
+            if(errno == EINTR)
+                continue;
+
+            contentLen = -1;
+            break;
+        }
+        
 		EB_LOGD(EB_LOG_NORMAL, "nRecvLen = %d contentLen: %d, errno = %d", nRecvLen, contentLen, errno);
-	} while (nRecvLen < 0 && errno == EINTR);
+	} while(1);
 
 	return contentLen;
 }

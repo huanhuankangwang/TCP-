@@ -47,11 +47,12 @@ PT_Sender  malloc_sender(char *remoteIp,int remotePort,int bindport,int size)
 		sender->port	   = remotePort;
 		sender->cseq	   = 0;
 		sender->mSize      = size;
-		strncpy(sender->remoteIp,remoteIp,MAX_REMOTE_IP_LEN);
+	    memcpy(sender->remoteIp,remoteIp,MAX_REMOTE_IP_LEN);
 	}while(0);
 
 	return sender;
 }
+
 int free_sender(PT_Sender sender)
 {
 	if(sender)
@@ -70,12 +71,23 @@ int free_sender(PT_Sender sender)
 
 int close_sender_senderthread(PT_Sender sender)
 {
-	return wpthreadkill(sender->send_pid);
+
+    sender->mSenderIsRunning = NOT_RUNNING;
+    while(sender->mSenderIsRunning != RUNNING_QUIT)
+    {
+        sleep(1);
+        pthread_mutex_lock(&sender->mutex);
+		pthread_cond_signal(&sender->cond);
+		pthread_mutex_unlock(&sender->mutex);
+    }
+	pthread_join(sender->send_pid,NULL);
+    return 0;
 }
 
 int close_sender_receviethread(PT_Sender sender)
 {
 	sender->isRunning = NOT_RUNNING;
+    return 0;
 }
 
 static int sender_send(PT_Sender sender,char *cmd,int len,int Cseq)
@@ -88,7 +100,7 @@ static int sender_send(PT_Sender sender,char *cmd,int len,int Cseq)
 	strcpy(data.msgType , SENDER_MSG_TYPE);
 
 	data.msgDataSize  = len > BUS_MSGDATA_MAX_LEN ? BUS_MSGDATA_MAX_LEN : len ;
-	strncpy(data.msgData , cmd , data.msgDataSize);
+	memcpy(data.msgData , cmd , data.msgDataSize);
 	data.mode   = 0;
 	data.mCseq  = Cseq;
 	
@@ -145,14 +157,12 @@ static void *do_sender_receive_thread(void*arg)
 	printf("exit do_sender_receive_thread1\r\n");
 	//退出发送线程
 	close_sender_senderthread(sender);
-	pthread_join(sender->send_pid,NULL);
 	sender->flag       = FLAG_NOT_VALID;
 
 	printf("exit do_sender_receive_thread2\r\n");
 
 	return NULL;
 }
-
 
 static void *do_sender_sender_thread(void*arg)
 {
@@ -175,7 +185,7 @@ static void *do_sender_sender_thread(void*arg)
 			enqueue(&sender->queue,record);//继续放入其中 直到被读出为止
 		}else{
 			//历史中没有记录 所以阻塞在这里等待 新记录
-			usleep(20000);
+			//usleep(20000);
 			printf("sender wait1 running =%d\r\n",sender->mSenderIsRunning);
 			pthread_cond_wait(&sender->cond,&sender->mutex);
 			printf("sender wait2\r\n");
@@ -249,7 +259,6 @@ PT_Sender openSender(char *remoteIp,int remotePort,int bindport,int totalSize)
 	    if(ret!=0)  
 	    {
 			close_sender_senderthread(sender);
-			pthread_join(sender->send_pid,NULL);
 			close(sender->sockfd);
 			free_sender(sender);
 			sender = NULL;
