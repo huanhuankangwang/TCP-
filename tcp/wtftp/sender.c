@@ -22,10 +22,6 @@
 #define  REPLAY_OK						"reply ok"
 #define  REPLAY_FAILED					"replay failed"
 
-static void signal_handle(int signum)
-{
-	pthread_exit(NULL);
-}
 
 PT_Sender  malloc_sender(char *remoteIp,int remotePort,int bindport,int size)
 {
@@ -43,7 +39,6 @@ PT_Sender  malloc_sender(char *remoteIp,int remotePort,int bindport,int size)
 		pthread_cond_init(&sender->cond,NULL);
 		sender->flag   	   = FLAG_VALID;
 		sender->isRunning  = RUNNING;
-		sender->mSenderIsRunning = RUNNING;
 		sender->port	   = remotePort;
 		sender->cseq	   = 0;
 		sender->mSize      = size;
@@ -69,29 +64,14 @@ int free_sender(PT_Sender sender)
 	return 0;
 }
 
-int close_sender_senderthread(PT_Sender sender)
+static int sender_receive(PT_Sender sender,BusMsg * msg,int timeout)
 {
-
-    sender->mSenderIsRunning = NOT_RUNNING;
-    while(sender->mSenderIsRunning != RUNNING_QUIT)
-    {
-        sleep(1);
-        pthread_mutex_lock(&sender->mutex);
-		pthread_cond_signal(&sender->cond);
-		pthread_mutex_unlock(&sender->mutex);
-    }
-	pthread_join(sender->send_pid,NULL);
-    return 0;
-}
-
-int close_sender_receviethread(PT_Sender sender)
-{
-	sender->isRunning = NOT_RUNNING;
-    return 0;
+	return receive_busMsg(sender->sockfd , msg ,timeout);
 }
 
 static int sender_send(PT_Sender sender,char *cmd,int len,int Cseq)
 {
+    int ret = -1;
 	BusMsg data;
 	memset( &data , 0 , sizeof(BusMsg));
 	strncpy(data.remoteAddr.ip , sender->remoteIp , 
@@ -104,65 +84,25 @@ static int sender_send(PT_Sender sender,char *cmd,int len,int Cseq)
 	data.mode   = 0;
 	data.mCseq  = Cseq;
 	
-	return send_busMsg(sender->sockfd , &data);
+	send_busMsg(sender->sockfd , &data);
+
+    memset( &data , 0 , sizeof(BusMsg));
+    if( sender_receive(sender,&data ,3000) > 0)
+    {
+        if( (strcmp(data.msgType,REPLY_MSG_TYPE) == 0)
+            && (strcmp(data.msgData,REPLAY_OK) == 0) && (data.mCseq == Cseq))
+        {            
+            //printf("sender_receive msgType=%s msgData=%s mCseq= %d sendCseq=%d\r\n",data.msgType,data.msgData,data.mCseq,Cseq);
+            ret = 0;
+        }
+    }else{
+       return -1;
+    }
+
+    return ret;
 }
 
-static int sender_receive(PT_Sender sender,BusMsg * msg)
-{
-	return receive_busMsg(sender->sockfd , msg);
-}
 
-static void *do_sender_receive_thread(void*arg)
-{
-	BusMsg		msg;
-	PT_Sender sender = (PT_Sender)arg;
-	MessageRecord  *record = NULL;
-	if(!sender)
-		return NULL;
-
-	do
-	{
-		memset(&msg ,0 , sizeof(BusMsg));
-		if( sender_receive(sender,&msg) > 0)
-		{
-			//成功接收到了
-			if(strcmp(msg.msgType , REPLY_MSG_TYPE ) == 0)
-			{
-				//找到相应的位置
-				if(strcmp(msg.msgData,REPLAY_OK) == 0)
-				{
-					//printf("receive replay_ok type=%s msgdata=%s\r\n",msg.msgType,msg.msgData);
-					record = removeOneByCseq(&sender->queue, msg.mCseq);
-					if(record)
-					{
-						sender->mSize -= record->mLen;
-						//printf("removeOneByCseq1 \r\n");
-						pthread_mutex_lock(&sender->mutex);
-						pthread_cond_signal(&sender->cond);
-						pthread_mutex_unlock(&sender->mutex);
-						//printf("removeOneByCseq2 \r\n");
-						free_record(record);
-						record = NULL;
-					}
-
-					if(sender->mSize <= 0)
-						break;
-				}
-			}
-		}	
-		
-	}while(sender->isRunning == RUNNING);
-
-	sender->isRunning  = RUNNING_QUIT;
-	printf("exit do_sender_receive_thread1\r\n");
-	//退出发送线程
-	close_sender_senderthread(sender);
-	sender->flag       = FLAG_NOT_VALID;
-
-	printf("exit do_sender_receive_thread2\r\n");
-
-	return NULL;
-}
 
 static void *do_sender_sender_thread(void*arg)
 {
@@ -172,31 +112,48 @@ static void *do_sender_sender_thread(void*arg)
 	if(!sender)
 		return NULL;
 
-	wsignal();
-
 	do
 	{
-		pthread_mutex_lock(&sender->mutex);
+	    if(sender->mSize <= 0)
+        {
+            break;
+        }
+        
 		record = dequeue(&sender->queue);
-		if(record)
+		if(record != NULL)
 		{
-			sender_send(sender,record->fContentStr,record->mLen,record->fCSeq);
-			//putAtHead(&sender->queue,record);
-			enqueue(&sender->queue,record);//继续放入其中 直到被读出为止
+			if( 0 != sender_send(sender,record->fContentStr,record->mLen,record->fCSeq))
+            {
+                //printf("enqueue(&sender->queue,record) \r\n");
+                printf("send failed\r\n");
+			    enqueue(&sender->queue,record);//继续放入其中 直到被读出为止
+			    //putAtHead(&sender->queue,record);
+			}else
+            {
+                printf("send ok\r\n");
+                sender->mSize -= record->mLen;
+                free_record(record);
+                record = NULL;
+                pthread_mutex_lock(&sender->mutex);
+                pthread_cond_signal(&sender->cond);
+    		    pthread_mutex_unlock(&sender->mutex);
+            }
+
+            usleep(1000);
 		}else{
 			//历史中没有记录 所以阻塞在这里等待 新记录
 			//usleep(20000);
-			printf("sender wait1 running =%d\r\n",sender->mSenderIsRunning);
+			printf("sender wait1 running =%d\r\n",sender->isRunning);
+            pthread_mutex_lock(&sender->mutex);
 			pthread_cond_wait(&sender->cond,&sender->mutex);
+            pthread_mutex_unlock(&sender->mutex);
 			printf("sender wait2\r\n");
 		}
-
-		//printf("loop do_sender_sender_thread\r\n");
-		pthread_mutex_unlock(&sender->mutex);	
+	    printf("loop do_sender_sender_thread\r\n");
 		
-	}while(sender->mSenderIsRunning == RUNNING);
+	}while(sender->isRunning == RUNNING);
 
-	sender->mSenderIsRunning  = RUNNING_QUIT;
+	sender->isRunning = RUNNING_QUIT;
 	printf("exit do_sender_sender_thread\r\n");
 
 	return NULL;
@@ -240,7 +197,7 @@ PT_Sender openSender(char *remoteIp,int remotePort,int bindport,int totalSize)
 		{
 			close(sender->sockfd);
 			free_sender(sender);
-			sender = NULL;		
+			sender = NULL;
 			break;
 		}
 		flags = fcntl(sender->sockfd , F_GETFL , 0);
@@ -255,31 +212,32 @@ PT_Sender openSender(char *remoteIp,int remotePort,int bindport,int totalSize)
 			break;
 	    }
 
-		ret = pthread_create(&sender->reply_pid,NULL,do_sender_receive_thread,(void*)sender);
-	    if(ret!=0)  
-	    {
-			close_sender_senderthread(sender);
-			close(sender->sockfd);
-			free_sender(sender);
-			sender = NULL;
-			break;
-	    }
-
         printf("sender ip:%s port:%d  sockfd:%d\r\n",sender->remoteIp,bindport,sender->sockfd);
 	}while(0);
 
 	return sender;
 }
 
+int close_sender_receviethread(PT_Sender sender)
+{
+    if(sender->isRunning == RUNNING)
+    {
+        while(sender->isRunning != RUNNING_QUIT)
+        {
+            pthread_mutex_lock(&sender->mutex);
+            pthread_cond_signal(&sender->cond);   
+            pthread_mutex_unlock(&sender->mutex);               
+        }
+    }
+
+    return 0;
+}
+
 int closeSender(PT_Sender sender)
 {
 	if(sender)
 	{
-		if(sender->isRunning == RUNNING)
-		{
-			close_sender_receviethread(sender);
-			pthread_join(sender->reply_pid,NULL);			
-		}
+        close_sender_receviethread(sender);
 		printf("closeSender1 %p\r\n",sender);
 		close(sender->sockfd);
 		printf("closeSender2 %p\r\n",sender);
@@ -305,30 +263,30 @@ int writeSender(PT_Sender sender,char *cmd,int len)
 		}
 
 		mlen = getQueueLength(&sender->queue);
-		printf("wait for wait len=%d\r\n",mlen);
+		//printf("wait for wait len=%d\r\n",mlen);
 		if(mlen >= SENDER_MAX_QUEUE_SIZE)
 		{
 			pthread_mutex_lock(&sender->mutex);
-
-			printf("sender pthread_cond_wait\r\n");
+			//printf("sender pthread_cond_wait\r\n");
 			//队列太长在 等待
 			pthread_cond_wait(&sender->cond,&sender->mutex);
 			pthread_mutex_unlock(&sender->mutex);
 		}
 
-		pthread_mutex_lock(&sender->mutex);
 		record   = malloc_record(sender->cseq,0,cmd,len);
-        printf("writeSender cseq =%d len =%d\r\n",sender->cseq,len);
+        //printf("writeSender cseq =%d len =%d\r\n",sender->cseq,len);
 		if(!record)
 		{
 			ret = -1;
 			return ret;
 		}
 
-		sender_send(sender,cmd,len ,sender->cseq++);
+		//sender_send(sender,cmd,len ,sender->cseq++);
+		sender->cseq++;
 		enqueue(&sender->queue,record);
-		
+
 		//唤醒
+		pthread_mutex_lock(&sender->mutex);
 		pthread_cond_signal(&sender->cond);
 		pthread_mutex_unlock(&sender->mutex);
 	}while(0);
@@ -339,7 +297,6 @@ int writeSender(PT_Sender sender,char *cmd,int len)
 //wait for sender exit
 int SenderJoin(PT_Sender sender)
 {
-	//pthread_join(sender->send_pid,NULL);
-	pthread_join(sender->reply_pid,NULL);
+	pthread_join(sender->send_pid,NULL);
 }
 

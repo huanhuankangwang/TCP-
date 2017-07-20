@@ -22,24 +22,21 @@ void *do_fileSender_thread(void*arg)
 	
 	do
 	{
-		{
-            memset((void*)tmp ,0,sizeof(tmp));
-            printf(" readFileReader \r\n");
-			ret  = readFileReader(sender->filereader,tmp,sizeof(tmp));
-			if(ret <  0)
-	       	{
-	       		break;
-	       	}else if(ret == 0)
-	       	{
-				continue;
-		   	}
-		}
-
-        
+        memset((void*)tmp ,0,sizeof(tmp));
+        //printf(" readFileReader \r\n");
+        ret  = readFileReader(sender->filereader,tmp,sizeof(tmp));
+        if(ret <  0)
+        {
+            break;
+        }else if(ret == 0)
+        {
+            continue;
+        }
+ 
 		len  = ret;
 		ret = writeSender(sender->sender,tmp,len);
-        printf("writeSender len =%d  ret =%d\r\n",len,ret);
-		if(ret <0)
+        //printf("writeSender len =%d  ret =%d\r\n",len,ret);
+		if(ret < 0)
 		{
 			break;
 		}

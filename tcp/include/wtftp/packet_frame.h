@@ -45,7 +45,7 @@ typedef struct {
 
 
 int send_busMsg(int sockfd,BusMsg *msg);
-int receive_busMsg(int nSocketFd, BusMsg *data);
+int receive_busMsg(int nSocketFd, BusMsg *data,int timeout);
 
 
 int ctrl_compose_frame(BusMsg *data,const char *frame);

@@ -204,7 +204,7 @@ MessageRecord* findByCSeq(MessageQueue *queue,unsigned cseq)
         }
     }
 
-    pthread_mutex_lock(&queue->cond_lock);
+    pthread_mutex_unlock(&queue->cond_lock);
     return NULL;
 }
 

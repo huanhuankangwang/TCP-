@@ -39,9 +39,9 @@ static int receive_reply(PT_Receiver recv,char *cmd,int len,int Cseq)
 	return send_busMsg(recv->sockfd , &data);
 }
 
-static int receiver_receive(PT_Receiver recv,BusMsg * msg)
+static int receiver_receive(PT_Receiver recv,BusMsg * msg,int timeout)
 {
-	return receive_busMsg(recv->sockfd , msg);
+	return receive_busMsg(recv->sockfd , msg, timeout);
 }
 
 PT_Receiver malloc_receiver(const char *remoteIp,int port,int bindPort,int size)
@@ -96,18 +96,48 @@ static void *do_receive_thread(void*arg)
 	do
 	{
 		memset(&msg,0 ,sizeof(BusMsg));
-		//接收
-		if ( receiver_receive(recv,&msg) >0)
+#if 0
+        //接收
+		if ( receiver_receive(recv,&msg,5000) >0)
 		{
+		    printf("recv queue len =%d msg.cseq =%d\r\n",recv->queue.mLen,msg.mCseq);
+            receive_reply(recv,REPLAY_OK,strlen(REPLAY_OK),msg.mCseq);
 			record	 = malloc_record(msg.mCseq,0,msg.msgData,msg.msgDataSize);
 			if(!record)
 			{
 				break;
 			}
 			enqueue(&recv->queue,record);
-			receive_reply(recv,REPLAY_OK,strlen(REPLAY_OK),msg.mCseq);
+			
 			//发送
 		}
+
+#else
+        if ( receiver_receive(recv,&msg,3000) >0)
+		{
+		  	receive_reply(recv,REPLAY_OK,strlen(REPLAY_OK),msg.mCseq);
+    		//发送
+		    record  = findByCSeq(&recv->queue,msg.mCseq);
+            if(!record)
+            {
+                //printf("recv queue len =%d msg.cseq =%d\r\n",recv->queue.mLen,msg.mCseq);
+    			record	 = malloc_record(msg.mCseq,0,msg.msgData,msg.msgDataSize);
+    			if(!record)
+    			{
+    				break;
+    			}
+    			enqueue(&recv->queue,record);
+           }
+		}
+
+
+        if(recv->mRecvSize <= 0)
+        {
+            break;
+        }
+
+        printf("do loop receiver_receive\r\n");
+#endif
 
 	}while(recv->isRunning == RUNNING);
 

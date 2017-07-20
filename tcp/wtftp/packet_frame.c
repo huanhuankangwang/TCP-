@@ -19,6 +19,26 @@
 static char s_aucMsgHead[4] = {0x45, 0x43, 0x45, 0x42};
 
 
+static int sockReadBlocked(int fd,int timeout)
+{
+	int rc;
+	fd_set fds;
+	static struct timeval out;
+	FD_ZERO(&fds);
+	FD_SET(fd,&fds);
+
+	out.tv_sec  = timeout / 1000;
+	out.tv_usec = (timeout %1000)*1000;//0.1s
+
+    //EB_LOGE("out.tv_sec =%d ,out.tv_sec=%d\r\n",out.tv_sec,out.tv_usec);
+	rc = select(fd+1, &fds, NULL, NULL, &out);
+	if (rc < 0)   //error
+		return -1;
+    //EB_LOGE("end\r\n");
+
+	return FD_ISSET(fd,&fds) ? 1 : 0;
+}
+
 int ctrl_compose_frame(BusMsg *data,const char *frame)
 {
     char *tmp;
@@ -258,7 +278,7 @@ int ctrl_decompose_frame(char *msg, int msgLen,BusMsg *pOutdata)
     return 0;
 }
 
-int receive_busMsg(int nSocketFd, BusMsg *data)
+int receive_busMsg(int nSocketFd, BusMsg *data,int timeout)
 {	 
 	int  nRecvLen;
 	int nAddrLen;
@@ -269,6 +289,15 @@ int receive_busMsg(int nSocketFd, BusMsg *data)
 
 	nAddrLen = sizeof(recvAddr);
 
+    if(timeout > 0)
+    {
+        if( 1 != sockReadBlocked(nSocketFd,timeout) )
+        {
+            printf("sockReadBlocked not read\r\n");
+            return 0;
+        }
+    }
+    
 	do {
 		nRecvLen = recvfrom(nSocketFd, acData, (BUS_FRAME_MIN_LEN+BUS_MSGDATA_MAX_LEN) , 0, (struct sockaddr *)(&recvAddr), &nAddrLen);
 
@@ -288,7 +317,6 @@ int receive_busMsg(int nSocketFd, BusMsg *data)
 
             break;
 		}
-
         else if(nRecvLen < 0)
         {
             if(errno == EINTR)

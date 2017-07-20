@@ -4,9 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <time.h>
 
 
-static  char levelProperty[4];
+
+
+static  char levelProperty[4] = EB_LOG_VERBOSE;
 
 static const unsigned long ulTable_MPEG32[256] = {
     0x00000000L, 0x04C11DB7L, 0x09823B6EL, 0x0D4326D9L,
@@ -92,7 +95,7 @@ unsigned long easy_crc32(void *pvStartAddress, unsigned long dwSizeInBytes)
     return ulCRC;
 }
 
-#ifdef EB_DEBUG
+#if 1
 void easy_print_mem(char *msg, char *buf, int size)
 {
     int index;
@@ -112,6 +115,11 @@ void easy_print_mem(char *msg, char *buf, int size)
 
 void easy_print(char *level, const char *fmt, ...)
 {
+    struct tm *ptm;
+    long ts;
+    int y,m,d,h,n,s;
+    char timeInfo[48];
+    
     if (strcmp(level, levelProperty) <= 0) {
         va_list ap;
         char *buf;
@@ -127,6 +135,17 @@ void easy_print(char *level, const char *fmt, ...)
         vsnprintf(buf, buflen, fmt, ap);
         va_end(ap);
 
+        ts = time(NULL);
+        ptm = localtime(&ts);
+        y   =   ptm-> tm_year+1900;
+        m   =   ptm-> tm_mon+1;
+        d   =   ptm-> tm_mday;
+        h   =   ptm-> tm_hour;
+        n   =   ptm-> tm_min;
+        s   =   ptm-> tm_sec;
+
+        sprintf(timeInfo, "[%02d-%02d-%02d %02d:%02d:%02d]",y, m,d,h,n,s);
+        LOGD("%s",timeInfo);
         LOGD("%s", buf);
 
         free(buf);
@@ -146,4 +165,5 @@ int setPrintLevel(char *level)
 	return 0;
 }
 #endif
+
 
