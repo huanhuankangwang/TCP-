@@ -150,7 +150,7 @@ int DebugPrint(char *level,char *tag,const char *pcFormat, ...)
 		return -1;
 	}
 
-    if( isExistDebugTag(tag) != 0)
+    if( isExistDebugTag(tag) != 0 && dbglevel >= 4)
     {
         return -1;
     }

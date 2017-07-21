@@ -10,7 +10,7 @@
 #define	APP_INFO	"<6>"	/* informational			*/
 #define	APP_DEBUG	"<7>"	/* debug-level messages			*/
 
-
+/**这种 需要设置打印级别才能看的了**/
 #define WTFTP_LOGE(TAG,fmt, args...) DebugPrint(APP_ERR, TAG,"[%s, %d]: "fmt, __FUNCTION__, __LINE__, ##args);
 #define WTFTP_LOGW(TAG,fmt, args...) DebugPrint(APP_WARNING,TAG, "[%s, %d]: "fmt, __FUNCTION__, __LINE__, ##args);
 #define WTFTP_LOGI(TAG,fmt, args...) DebugPrint(APP_INFO,TAG, "[%s, %d]: "fmt, __FUNCTION__, __LINE__, ##args);

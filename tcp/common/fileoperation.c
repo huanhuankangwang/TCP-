@@ -12,6 +12,9 @@
 
 #include <fileoperation.h>
 
+#include "config.h"
+
+
 long fileSize(const char *path)
 {  
 	long size = -1;	  
@@ -34,7 +37,7 @@ int create_file(const char *filename)
     fd = creat(filename,0777);
     if (0 > fd)  
     {
-        printf("errno:%s\n",strerror(errno));
+        EB_LOGE("errno:%s\n",strerror(errno));
         return -1;
     }  
     else  
@@ -55,7 +58,7 @@ int openfile(const char *filename,int mode)
 	fd = open(filename,mode);
 	if(fd <0)
 	{
-		printf("open file %s err reason: %s\r\n",filename,strerror(errno));
+		EB_LOGE("open file %s err reason: %s\r\n",filename,strerror(errno));
 		return -1;
 	}
 
@@ -78,7 +81,7 @@ int read_fd(int fd,const char *buf,int maxsize)
         ret = read(fd,buf,maxsize);
         if(ret <=0)
         {
-            printf("read fd=%d reason: %s\r\n",fd,strerror(errno));
+            EB_LOGE("read fd=%d reason: %s\r\n",fd,strerror(errno));
             break;
         }
 
@@ -99,7 +102,7 @@ int write_fd(int fd,const char *buf,int size)
 		ret = write(fd,buf,size);
 		if(ret <= 0)
         {
-            printf("write fd=%d reason: %s\r\n",fd,strerror(errno));
+            EB_LOGE("write fd=%d reason: %s\r\n",fd,strerror(errno));
             break;
 		}
 		buf += ret;
@@ -131,7 +134,7 @@ int mkdirs(const char *dir)
         ret = mkdir(tmp, 0777);
 		if(ret)
        	{
-       		printf("mkdir %s err reason:%s\r\n",dir,strerror(errno));
+       		EB_LOGE("mkdir %s err reason:%s\r\n",dir,strerror(errno));
        		break;
        	}
     }

@@ -15,6 +15,8 @@
 #include <pthread_define.h>
 
 #include <easy_common.h>
+#include "config.h"
+
 
 #define  SENDER_MSG_TYPE				"sender"
 #define  REPLY_MSG_TYPE					"reply"
@@ -120,7 +122,7 @@ static void *do_receive_thread(void*arg)
 		    record  = findByCSeq(&recv->queue,msg.mCseq);
             if(!record)
             {
-                //printf("recv queue len =%d msg.cseq =%d\r\n",recv->queue.mLen,msg.mCseq);
+                EB_LOGD("recv queue len =%d msg.cseq =%d\r\n",recv->queue.mLen,msg.mCseq);
     			record	 = malloc_record(msg.mCseq,0,msg.msgData,msg.msgDataSize);
     			if(!record)
     			{
@@ -136,7 +138,6 @@ static void *do_receive_thread(void*arg)
             break;
         }
 
-        printf("do loop receiver_receive\r\n");
 #endif
 
 	}while(recv->isRunning == RUNNING);
@@ -152,8 +153,6 @@ PT_Receiver openReceiver(const char *remoteIp,int port,int bindPort,int size)
 	int flags;
     int on = 1;
 	struct sockaddr_in servAddr;
-
-	EB_LOGE("openReceiver \r\n");
 
 	do
 	{	
@@ -188,7 +187,7 @@ PT_Receiver openReceiver(const char *remoteIp,int port,int bindPort,int size)
 		servAddr.sin_port = htons(bindPort);
 		if((ret = bind(recv->sockfd, (struct sockaddr *)&servAddr, sizeof(servAddr))) < 0) 
 		{
-			printf("wangkang bind error: %d, %s", ret, strerror(errno));
+			EB_LOGE("wangkang bind error: %d, %s", ret, strerror(errno));
 			close(recv->sockfd);
 			free_receiver(recv);
 			recv = NULL;		
@@ -204,10 +203,9 @@ PT_Receiver openReceiver(const char *remoteIp,int port,int bindPort,int size)
 			break;
 	    }
 
-        printf("receive ip:%s port:%d sockfd =%d\r\n",recv->remoteIp,bindPort,recv->sockfd);
+        EB_LOGE("receive ip:%s port:%d sockfd =%d\r\n",recv->remoteIp,bindPort,recv->sockfd);
 	}while(0);
 
-	EB_LOGE("openReceiver \r\n");
 	return recv;
 }
 
@@ -225,7 +223,7 @@ int closeReceiver(PT_Receiver recv)
 			recv->isRunning = NOT_RUNNING;
 			while(recv->isRunning == RUNNING_QUIT)
 			{
-				printf(" running =%d flag = %d ",recv->isRunning,recv->flag);
+				EB_LOGE(" running =%d flag = %d ",recv->isRunning,recv->flag);
 				usleep(200);
 			}//等待退出成功
 		}
@@ -253,7 +251,7 @@ int readReceiver(PT_Receiver recv,const char *cmd,int maxsize)
 	record = removeOneByCseq(&recv->queue , recv->cseq);
 	if(record)
 	{
-		//printf("readReceiver cseq =%d\r\n",recv->cseq);
+		EB_LOGD("readReceiver cseq =%d\r\n",recv->cseq);
 		recv->cseq++;
 		ret = record->mLen > maxsize ? maxsize : record->mLen;
 		memcpy(cmd,record->fContentStr, ret);

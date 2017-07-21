@@ -1,5 +1,6 @@
 #include <wlog.h>
 
+#include <stdio.h>
 
 #define   TAG_WANG       "wangkang"
 #define   TAG            "test_wlog"

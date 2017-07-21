@@ -9,8 +9,8 @@
 #include <fileWriter.h>
 #include <fileoperation.h>
 
+#include "config.h"
 
-#define    FILE_WRITER_DEBUG(...)
 
 #define      RUNNING             1
 #define      NOT_RUNNING         0
@@ -34,16 +34,16 @@ void *do_write_thread(void*arg)
     int  ret = 0,len;
 	char tmp[1024];
 	PT_FileWriter writer = (PT_FileWriter)arg;	
-	FILE_WRITER_DEBUG("readFileWriter mWritePos=%d\r\n",writer->ringbuf->mWritePos);
+	EB_LOGD("readFileWriter mWritePos=%d\r\n",writer->ringbuf->mWritePos);
 	do
 	{
 	    memset(tmp,0,sizeof(tmp));
-		FILE_WRITER_DEBUG("lock readFileWriter mWritePos=%d\r\n",writer->ringbuf->mWritePos);
+		EB_LOGD("lock readFileWriter mWritePos=%d\r\n",writer->ringbuf->mWritePos);
 
         pthread_mutex_lock(&writer->mutex);
-		FILE_WRITER_DEBUG("do_write_thread lock readFileWriter mWritePos=%d\r\n",writer->ringbuf->mWritePos);
+		EB_LOGD("do_write_thread lock readFileWriter mWritePos=%d\r\n",writer->ringbuf->mWritePos);
         ret = readFileWriter(writer,tmp,sizeof(tmp));//读不到会阻塞在这里
-		FILE_WRITER_DEBUG("do_write_thread ret =%d isRunn\r\n",ret,writer->isRunning);
+		EB_LOGD("do_write_thread ret =%d isRunn\r\n",ret,writer->isRunning);
         len = ret;
         ret = write_fd(writer->fd,tmp,len);
         if(ret != len)
@@ -53,7 +53,7 @@ void *do_write_thread(void*arg)
         }
         
         pthread_mutex_unlock(&writer->mutex);
-		FILE_WRITER_DEBUG("do_write_thread unlock readFileWriter \r\n");	
+		EB_LOGD("do_write_thread unlock readFileWriter \r\n");	
 	}while(writer->isRunning);
 
     writer->isRunning = RUNNING_QUIT;//成功退出
@@ -147,11 +147,11 @@ int readFileWriter(PT_FileWriter writer,char *str,int size)
 
     while(size > 0)
     {
-       FILE_WRITER_DEBUG("readFileWriter readString mWritePos=%d\r\n",writer->ringbuf->mWritePos);
+       EB_LOGD("readFileWriter readString mWritePos=%d\r\n",writer->ringbuf->mWritePos);
        ret = readString(writer->ringbuf,str,size);
        if(ret <= 0)
        {
-       	   FILE_WRITER_DEBUG("readFileWriter wait for data\r\n");
+       	   EB_LOGD("readFileWriter wait for data\r\n");
            //阻塞在这里
            
            if(!IS_RUNNING(writer))
@@ -163,7 +163,7 @@ int readFileWriter(PT_FileWriter writer,char *str,int size)
        }
 
        readsize += ret;
-	   FILE_WRITER_DEBUG("readFileWriter wait for data ret =%d\r\n",ret);
+	   EB_LOGD("readFileWriter wait for data ret =%d\r\n",ret);
        size  -= ret;
        str  += ret;
     }

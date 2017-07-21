@@ -16,12 +16,22 @@
 #include <filesender.h>
 #include <fileoperation.h>
 
-#define    EB_LOGE  printf
+#include <common.h>
+#include <wlog.h>
 
+
+
+#undef TAG
+#define    TAG          "WTFTP_TEST"
+
+#define    EB_LOGE(fmt,args...)  WTFTP_LOGE(TAG,fmt, ##args)
+#define    EB_LOGD(fmt,args...)  WTFTP_LOGD(TAG,fmt, ##args)
+
+#define    LOGD                 printf
 
 int print_usage()
 {
-	printf("arg: sendfilename receivefilename\r\n");
+	LOGD("arg: sendfilename receivefilename\r\n");
 	return 0;
 }
 
@@ -33,7 +43,7 @@ int getLocalIp(char *localIp)
     struct   sockaddr_in *sin;
     struct   ifreq ifr_ip;
   
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)  
+    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
     {  
          EB_LOGE("socket create failse...getLocalIp!\r\n");  
          return -1;
@@ -48,7 +58,6 @@ int getLocalIp(char *localIp)
     }       
     sin = (struct sockaddr_in *)&ifr_ip.ifr_addr;     
     strcpy(ipaddr,inet_ntoa(sin->sin_addr));    
-    EB_LOGE("local ip:%s \r\n",ipaddr);
 	strncpy(localIp,ipaddr,20);
     close( sockfd);  
       
@@ -65,6 +74,13 @@ int main(int argc,char **argv)
 	int   bindport = 3451;
 	int   port     = 4531;
 	int   filesize = 0;
+
+
+    if( initCommon() )
+    {
+        LOGD("initCommon err\r\n");
+        return 0;
+    }
 	
     switch(argc)
     {
@@ -77,11 +93,11 @@ int main(int argc,char **argv)
     }
 	if(getLocalIp(ip) != 0 )
 	{
-		printf("get local ip err\r\n");
+		EB_LOGE("get local ip err\r\n");
 		return 0;
 	}
 
-	printf("ip =%s \r\n",ip);
+	EB_LOGE("ip =%s \r\n",ip);
 
 	create_file(recvfilename);
 

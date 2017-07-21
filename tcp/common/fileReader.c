@@ -10,12 +10,12 @@
 #include <fileReader.h>
 #include <fileoperation.h>
 
+#include "config.h"
+
 #define      RUNNING            1
 #define      NOT_RUNNING        0
 #define      RUNNING_QUIT		-1
 
-#define   FILE_READER_DEBUG(...)
-//#define   FILE_READER_DEBUG  printf
 
 #define   isRunning(reader)	(reader->isRunning == RUNNING)
 #define   isEof(reader)		(reader->flag == END_OF_FILE)
@@ -33,11 +33,11 @@ void *do_read_thread(void*arg)
 	{
 	    memset(tmp,0,sizeof(tmp));
         pthread_mutex_lock(&reader->mutex);
-        FILE_READER_DEBUG("lock in do_read_thread\r\n");
+        EB_LOGD("lock in do_read_thread\r\n");
 		ret = read_fd(reader->fd,tmp,sizeof(tmp));
         if(ret <= 0)
         {
-            printf("commpeter read \r\n");
+            EB_LOGE("commpeter read \r\n");
             reader->flag = END_OF_FILE;
             pthread_mutex_unlock(&reader->mutex);
             break;
@@ -63,10 +63,10 @@ void *do_read_thread(void*arg)
 			
 	}while(reader->isRunning == RUNNING);
 
-	FILE_READER_DEBUG("exit do_read_thread isRunning= %d %d\r\n",reader->isRunning,reader->flag);
+	EB_LOGE("exit do_read_thread isRunning= %d %d\r\n",reader->isRunning,reader->flag);
     reader->flag = END_OF_FILE;
     reader->isRunning = RUNNING_QUIT;//成功退出
-	FILE_READER_DEBUG("exit do_read_thread isRunning= %d %d\r\n",reader->isRunning,reader->flag);
+	EB_LOGE("exit do_read_thread isRunning= %d %d\r\n",reader->isRunning,reader->flag);
 
 	return NULL;
 }
@@ -129,7 +129,7 @@ int closeFileReader(PT_FileReader reader)
 {
 	if(reader)
 	{
-		FILE_READER_DEBUG("wait for exit %d\r\n",reader->isRunning);
+		EB_LOGD("wait for exit %d\r\n",reader->isRunning);
 
 		if(!isEof(reader))
 		{
@@ -140,7 +140,7 @@ int closeFileReader(PT_FileReader reader)
 			reader->isRunning = NOT_RUNNING;
 			while(reader->isRunning == RUNNING_QUIT)
 	        {
-	            printf(" running =%d flag = %d ",reader->isRunning,reader->flag);
+	            EB_LOGE(" running =%d flag = %d ",reader->isRunning,reader->flag);
 	            usleep(200);
 	        }//等待退出成功
 		}
@@ -155,7 +155,7 @@ int closeFileReader(PT_FileReader reader)
 		reader = NULL;
 	}
 
-    FILE_READER_DEBUG("closeFileReader\r\n");
+    EB_LOGD("closeFileReader\r\n");
 	return 0;
 }
 
@@ -163,7 +163,7 @@ int readFileReader(PT_FileReader reader,char *str,int maxsize)
 {
 	int  ret = 0,size = 0;
 
-    FILE_READER_DEBUG("lock in readFileReader\r\n");
+    EB_LOGD("lock in readFileReader\r\n");
 	pthread_mutex_lock(&reader->mutex);
 
     while(maxsize > 0)
@@ -171,7 +171,7 @@ int readFileReader(PT_FileReader reader,char *str,int maxsize)
        ret = readString(reader->ringbuf,str,maxsize);
        if(ret <= 0)
        {
-           FILE_READER_DEBUG("in readFileReader ret = %d running =%d flag = %d \r\n",ret,reader->isRunning,reader->flag);
+           EB_LOGD("in readFileReader ret = %d running =%d flag = %d \r\n",ret,reader->isRunning,reader->flag);
 		   if(isEof(reader) && (size <= 0) )
 		   {
 		   		return -1;//是文件结束，并且是不在运行
@@ -186,7 +186,7 @@ int readFileReader(PT_FileReader reader,char *str,int maxsize)
     }
 
     pthread_cond_signal(&reader->cond);
-    FILE_READER_DEBUG("unlock in readFileReader\r\n");
+    EB_LOGD("unlock in readFileReader\r\n");
     pthread_mutex_unlock(&reader->mutex);
 
     return size;

@@ -14,6 +14,8 @@
 #include <packet_frame.h>
 #include <pthread_define.h>
 
+#include "config.h"
+
 
 #define	 SENDER_MAX_QUEUE_SIZE			(20)
 
@@ -52,7 +54,7 @@ int free_sender(PT_Sender sender)
 {
 	if(sender)
 	{
-		printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\r\n");
+		EB_LOGE("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\r\n");
 		pthread_mutex_destroy(&sender->mutex);
         pthread_cond_destroy(&sender->cond);
 		deinit_messageQueue(&sender->queue);
@@ -92,7 +94,7 @@ static int sender_send(PT_Sender sender,char *cmd,int len,int Cseq)
         if( (strcmp(data.msgType,REPLY_MSG_TYPE) == 0)
             && (strcmp(data.msgData,REPLAY_OK) == 0) && (data.mCseq == Cseq))
         {            
-            //printf("sender_receive msgType=%s msgData=%s mCseq= %d sendCseq=%d\r\n",data.msgType,data.msgData,data.mCseq,Cseq);
+            EB_LOGD("sender_receive msgType=%s msgData=%s mCseq= %d sendCseq=%d\r\n",data.msgType,data.msgData,data.mCseq,Cseq);
             ret = 0;
         }
     }else{
@@ -124,13 +126,12 @@ static void *do_sender_sender_thread(void*arg)
 		{
 			if( 0 != sender_send(sender,record->fContentStr,record->mLen,record->fCSeq))
             {
-                //printf("enqueue(&sender->queue,record) \r\n");
-                printf("send failed\r\n");
+                EB_LOGD("enqueue(&sender->queue,record) send failed\r\n");
 			    enqueue(&sender->queue,record);//继续放入其中 直到被读出为止
 			    //putAtHead(&sender->queue,record);
 			}else
             {
-                printf("send ok\r\n");
+                EB_LOGD("send ok\r\n");
                 sender->mSize -= record->mLen;
                 free_record(record);
                 record = NULL;
@@ -143,13 +144,13 @@ static void *do_sender_sender_thread(void*arg)
 		}else{
 			//历史中没有记录 所以阻塞在这里等待 新记录
 			//usleep(20000);
-			printf("sender wait1 running =%d\r\n",sender->isRunning);
+			EB_LOGD("sender wait1 running =%d\r\n",sender->isRunning);
             pthread_mutex_lock(&sender->mutex);
 			pthread_cond_wait(&sender->cond,&sender->mutex);
             pthread_mutex_unlock(&sender->mutex);
-			printf("sender wait2\r\n");
+			EB_LOGD("sender wait2\r\n");
 		}
-	    printf("loop do_sender_sender_thread\r\n");
+	    EB_LOGD("loop do_sender_sender_thread\r\n");
 		
 	}while(sender->isRunning == RUNNING);
 
@@ -212,7 +213,7 @@ PT_Sender openSender(char *remoteIp,int remotePort,int bindport,int totalSize)
 			break;
 	    }
 
-        printf("sender ip:%s port:%d  sockfd:%d\r\n",sender->remoteIp,bindport,sender->sockfd);
+        EB_LOGD("sender ip:%s port:%d  sockfd:%d\r\n",sender->remoteIp,bindport,sender->sockfd);
 	}while(0);
 
 	return sender;
@@ -238,9 +239,9 @@ int closeSender(PT_Sender sender)
 	if(sender)
 	{
         close_sender_receviethread(sender);
-		printf("closeSender1 %p\r\n",sender);
+		EB_LOGE("closeSender1 %p\r\n",sender);
 		close(sender->sockfd);
-		printf("closeSender2 %p\r\n",sender);
+		EB_LOGE("closeSender2 %p\r\n",sender);
 		free_sender(sender);
 		sender = NULL;
 	}
@@ -263,18 +264,18 @@ int writeSender(PT_Sender sender,char *cmd,int len)
 		}
 
 		mlen = getQueueLength(&sender->queue);
-		//printf("wait for wait len=%d\r\n",mlen);
+		//EB_LOGD("wait for wait len=%d\r\n",mlen);
 		if(mlen >= SENDER_MAX_QUEUE_SIZE)
 		{
 			pthread_mutex_lock(&sender->mutex);
-			//printf("sender pthread_cond_wait\r\n");
+			//EB_LOGD("sender pthread_cond_wait\r\n");
 			//队列太长在 等待
 			pthread_cond_wait(&sender->cond,&sender->mutex);
 			pthread_mutex_unlock(&sender->mutex);
 		}
 
 		record   = malloc_record(sender->cseq,0,cmd,len);
-        //printf("writeSender cseq =%d len =%d\r\n",sender->cseq,len);
+        //EB_LOGD("writeSender cseq =%d len =%d\r\n",sender->cseq,len);
 		if(!record)
 		{
 			ret = -1;

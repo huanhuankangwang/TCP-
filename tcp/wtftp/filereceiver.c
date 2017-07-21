@@ -6,6 +6,8 @@
 
 #include <easy_common.h>
 
+#include "config.h"
+
 static void *do_filereceiver_thread(void*arg)
 {
 	
@@ -64,15 +66,17 @@ PT_FileReceiver openFileReceiver(const char * filename,const char * remoteIp,
 		recv->writer = openFileWriter(filename,1024*10);
 		if(!recv->writer)
 		{
+		    EB_LOGE("openFileWriter err\r\n");
 			free(recv);
 			recv = NULL;
 			break;
 		}
-		EB_LOGE("openFileReceiver \r\n");
+		EB_LOGD("openFileReceiver \r\n");
 
 		recv->receiver = openReceiver(remoteIp,port,bindPort,filesize);
 		if(!recv->receiver)
 		{
+		    EB_LOGE("openReceiver err\r\n");
 			closeFileWriter(recv->writer);
 			recv->writer = NULL;
 			free(recv);
@@ -80,11 +84,12 @@ PT_FileReceiver openFileReceiver(const char * filename,const char * remoteIp,
 			break;
 		}
 
-		EB_LOGE("openFileReceiver \r\n");
+		EB_LOGD("openFileReceiver \r\n");
 
 		ret = pthread_create(&recv->pid,NULL,do_filereceiver_thread,recv);
 		if(ret != 0)
 		{
+		    EB_LOGE("pthread_create do_filereceiver_thread err\r\n");
 			closeReceiver(recv->receiver);
 			recv->receiver = NULL;
 			closeFileWriter(recv->writer);
@@ -98,7 +103,7 @@ PT_FileReceiver openFileReceiver(const char * filename,const char * remoteIp,
 		recv->isRunning  = RUNNING;
 	}while(0);
 
-	EB_LOGE("openFileReceiver \r\n");
+	EB_LOGD("openFileReceiver \r\n");
 	return recv;
 }
 

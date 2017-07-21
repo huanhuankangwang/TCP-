@@ -1,4 +1,4 @@
-OBJS:= messageQueue.o messageRecord.o fileReader.o fileWriter.o ringbuffer.o fileoperation.o wlog/wlog.a
+OBJS:= messageQueue.o messageRecord.o fileReader.o fileWriter.o ringbuffer.o fileoperation.o wlog/wlog.a common.o
 
 %.o : %.S
 	$(CC) -g -c $^

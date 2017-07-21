@@ -7,9 +7,8 @@
 #include <time.h>
 
 
+#include "config.h"
 
-
-static  char levelProperty[4] = EB_LOG_VERBOSE;
 
 static const unsigned long ulTable_MPEG32[256] = {
     0x00000000L, 0x04C11DB7L, 0x09823B6EL, 0x0D4326D9L,
@@ -95,75 +94,22 @@ unsigned long easy_crc32(void *pvStartAddress, unsigned long dwSizeInBytes)
     return ulCRC;
 }
 
-#if 1
 void easy_print_mem(char *msg, char *buf, int size)
 {
     int index;
 
-    EB_LOGD(EB_LOG_VERBOSE, "%s \n", msg);
+    EB_LOGE("%s \n", msg);
     for (index = 0; index < size / 10; index++) {
-        EB_LOGD(EB_LOG_VERBOSE, "%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x \n", buf[index * 10 + 0],
+        EB_LOGE("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x \n", buf[index * 10 + 0],
                 buf[index * 10 + 1], buf[index * 10 + 2], buf[index * 10 + 3],
                 buf[index * 10 + 4], buf[index * 10 + 5], buf[index * 10 + 6],
                 buf[index * 10 + 7], buf[index * 10 + 8], buf[index * 10 + 9]);
     }
     for (index = 0; index < size % 10; index++) {
-        EB_LOGD(EB_LOG_VERBOSE, "%02x ", buf[(size / 10) * 10 + index]);
+        EB_LOGE("%02x ", buf[(size / 10) * 10 + index]);
     }
-    EB_LOGD(EB_LOG_VERBOSE, "\n");
+    LOGD("\n");
 }
 
-void easy_print(char *level, const char *fmt, ...)
-{
-    struct tm *ptm;
-    long ts;
-    int y,m,d,h,n,s;
-    char timeInfo[48];
-    
-    if (strcmp(level, levelProperty) <= 0) {
-        va_list ap;
-        char *buf;
-        const int buflen = 10 * 1024;
-
-        buf = malloc(buflen);
-        if (buf == NULL) {
-            return;
-        }
-        memset(buf, 0, sizeof(buf));
-
-        va_start(ap, fmt);
-        vsnprintf(buf, buflen, fmt, ap);
-        va_end(ap);
-
-        ts = time(NULL);
-        ptm = localtime(&ts);
-        y   =   ptm-> tm_year+1900;
-        m   =   ptm-> tm_mon+1;
-        d   =   ptm-> tm_mday;
-        h   =   ptm-> tm_hour;
-        n   =   ptm-> tm_min;
-        s   =   ptm-> tm_sec;
-
-        sprintf(timeInfo, "[%02d-%02d-%02d %02d:%02d:%02d]",y, m,d,h,n,s);
-        LOGD("%s",timeInfo);
-        LOGD("%s", buf);
-
-        free(buf);
-    }
-
-}
-
-int setPrintLevel(char *level)
-{
-	int len = 0;
-	len = strlen(level);
-
-	if(len<0 && len >= sizeof(levelProperty))
-		return 1;
-
-	strncpy(levelProperty,level,len);
-	return 0;
-}
-#endif
 
 
