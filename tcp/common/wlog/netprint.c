@@ -1,5 +1,4 @@
-#include <config.h>
-#include <debug_manager.h>
+#include "debug_manager.h"
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
 #include <string.h>
@@ -113,13 +112,11 @@ static void *NetDbgRecvTreadFunction(void *pVoid)
 	while (1)
 	{
 		iAddrLen = sizeof(struct sockaddr);
-		DBG_PRINTF("in NetDbgRecvTreadFunction\n");
 		iRecvLen = recvfrom(g_iSocketServer, ucRecvBuf, 999, 0, (struct sockaddr *)&tSocketClientAddr, &iAddrLen);
 		
 		if (iRecvLen > 0)	
 		{
 			ucRecvBuf[iRecvLen] = '\0';
-			DBG_PRINTF("netprint.c get msg: %s\n", ucRecvBuf);
 			
 			/* 解析数据:
 			 * setclient            : 设置接收打印信息的客户端

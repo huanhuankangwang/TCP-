@@ -1,4 +1,4 @@
-OBJS:= messageQueue.o messageRecord.o fileReader.o fileWriter.o ringbuffer.o fileoperation.o
+OBJS:= messageQueue.o messageRecord.o fileReader.o fileWriter.o ringbuffer.o fileoperation.o wlog/wlog.a
 
 %.o : %.S
 	$(CC) -g -c $^
@@ -18,5 +18,9 @@ $(TARGET):$(OBJS)
 common.a:$(OBJS)
 	$(LD) -r -o $@ $^
 
+wlog/wlog.a:
+	make -C wlog
+
 clean:
+	make clean -C wlog
 	rm *.o *.a -rf

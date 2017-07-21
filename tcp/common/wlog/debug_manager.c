@@ -1,5 +1,4 @@
-#include <config.h>
-#include <debug_manager.h>
+#include "debug_manager.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -7,9 +6,21 @@
 
 
 static PT_DebugOpr g_ptDebugOprHead;
-static int g_iDbgLevelLimit = 8;
+static int g_iDbgLevelLimit = DEFAULT_DBGLEVEL;
 
 #define   STR(s)      #s
+
+static char  levelDesc[][20] =
+{
+    STR(APP_EMERG  ),
+    STR(APP_ALERT  ),
+    STR(APP_CRIT   ),
+    STR(APP_ERR	   ),
+    STR(APP_WARNING),
+    STR(APP_NOTICE ),
+    STR(APP_INFO   ),
+    STR(APP_DEBUG  ),
+};
 
 int RegisterDebugOpr(PT_DebugOpr ptDebugOpr)
 {
@@ -128,7 +139,7 @@ int DebugPrint(char *level,char *tag,const char *pcFormat, ...)
 	if ((level[0] == '<') && (level[2] == '>'))
 	{
 		dbglevel = level[1] - '0';
-		if (dbglevel < 0 && dbglevel > 9)
+		if (dbglevel < 0 && dbglevel > 8)
 		{
 			dbglevel = DEFAULT_DBGLEVEL;
 		}
@@ -139,7 +150,7 @@ int DebugPrint(char *level,char *tag,const char *pcFormat, ...)
 		return -1;
 	}
 
-    if( isExistDebugTag(tag) == 0)
+    if( isExistDebugTag(tag) != 0)
     {
         return -1;
     }
@@ -157,9 +168,8 @@ int DebugPrint(char *level,char *tag,const char *pcFormat, ...)
     h   =   ptm-> tm_hour;
     n   =   ptm-> tm_min;
     s   =   ptm-> tm_sec;
-    sprintf(timeInfo, "[%02d-%02d-%02d %02d:%02d:%02d] [%s]",y, m,d,h,n,s,level);
-
-    sprintf(printBuf,"[%s] [%s] [%s] [%s]:",timeInfo,level,tag,strTmpBuf);
+    sprintf(timeInfo, "%02d-%02d-%02d %02d:%02d:%02d",y, m,d,h,n,s);
+    sprintf(printBuf,"[%s] [%s] [%s] %s",timeInfo,levelDesc[dbglevel],tag,strTmpBuf);
     pcTmp = printBuf;
 
 	/* 调用链表中所有isCanUse为1的结构体的DebugPrint函数 */

@@ -1,6 +1,4 @@
-
-#include <config.h>
-#include <debug_manager.h>
+#include "debug_manager.h"
 #include <stdio.h>
 #include <string.h>
 

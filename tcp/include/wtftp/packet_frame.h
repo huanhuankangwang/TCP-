@@ -43,7 +43,6 @@ typedef struct {
 } BusMsg;
 
 
-
 int send_busMsg(int sockfd,BusMsg *msg);
 int receive_busMsg(int nSocketFd, BusMsg *data,int timeout);
 
