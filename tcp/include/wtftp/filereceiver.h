@@ -4,19 +4,18 @@
 #include <receiver.h>
 #include <fileWriter.h>
 
-typedef struct
-{
-	PT_FileWriter  writer;
-	PT_Receiver    receiver;
+typedef struct {
+    PT_FileWriter  writer;
+    PT_Receiver    receiver;
 
-	int             isRunning;
-	int 			flag;
-	pthread_t      pid;
-}T_FileReceiver,*PT_FileReceiver;
+    int             isRunning;
+    int             flag;
+    pthread_t      pid;
+} T_FileReceiver,*PT_FileReceiver;
 
 
 PT_FileReceiver openFileReceiver(const char * filename,const char * remoteIp,
-		int port,int bindPort,int filesize);
+                                 int port,int bindPort,int filesize);
 
 int closeFileReceiver(PT_FileReceiver recv);
 int FileReceiverJoin(PT_FileReceiver  recv);

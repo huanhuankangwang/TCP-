@@ -9,22 +9,21 @@
 
 #define            MAX_REMOTE_IP_LEN      20
 
-typedef struct
-{
-	MessageQueue    queue;//存放发送的记录
-	int    			sockfd;
-	int             isRunning;
-	int 			flag;
-	int				port;
-	int 			cseq;//当前处理的 cseq
-	int 			mRecvSize;//待接收的大小
-	
-	char			remoteIp[MAX_REMOTE_IP_LEN];
+typedef struct {
+    MessageQueue    queue;//存放发送的记录
+    int             sockfd;
+    int             isRunning;
+    int             flag;
+    int             port;
+    int             cseq;//当前处理的 cseq
+    int             mRecvSize;//待接收的大小
 
-	pthread_cond_t	cond;
-	pthread_t 		pid;
-	pthread_mutex_t mutex;	
-}T_Receiver,*PT_Receiver;
+    char            remoteIp[MAX_REMOTE_IP_LEN];
+
+    pthread_cond_t  cond;
+    pthread_t       pid;
+    pthread_mutex_t mutex;
+} T_Receiver,*PT_Receiver;
 
 
 PT_Receiver openReceiver(const char *remoteIp,int port,int bindPort,int size);

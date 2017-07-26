@@ -4,14 +4,14 @@
 extern  int sockfd;
 
 
-int 	read_data(int *type,unsigned char *data,int *len);
-int 	write_data(int type,unsigned char *data,int len);
+int     read_data(int *type,unsigned char *data,int *len);
+int     write_data(int type,unsigned char *data,int len);
 
-//#define     	packet_debug			printf
-#define     	packet_debug(...)
+//#define       packet_debug            printf
+#define         packet_debug(...)
 
 
 
-//#define   		USE_ACK
+//#define           USE_ACK
 
 #endif//_PACKET_H_

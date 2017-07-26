@@ -7,30 +7,30 @@
 #define            MAX_REMOTE_IP_LEN      20
 
 
-typedef struct _sender{
-	MessageQueue    queue;//存放发送的记录
-	int    			sockfd;
-	int             isRunning;
-	int 			flag;
-	int				port;
-	int 			cseq;
+typedef struct _sender {
+    MessageQueue    queue;//存放发送的记录
+    int             sockfd;
+    int             isRunning;
+    int             flag;
+    int             port;
+    int             cseq;
 
-	int 			mSize;
-	
-	char			remoteIp[MAX_REMOTE_IP_LEN];
+    int             mSize;
 
-	pthread_t 		send_pid;
-	pthread_cond_t	cond;
-	pthread_mutex_t mutex;
+    char            remoteIp[MAX_REMOTE_IP_LEN];
 
-	pthread_mutex_t write_mutex;
-	pthread_cond_t  write_cond;
-}T_Sender,*PT_Sender;
+    pthread_t       send_pid;
+    pthread_cond_t  cond;
+    pthread_mutex_t mutex;
+
+    pthread_mutex_t write_mutex;
+    pthread_cond_t  write_cond;
+} T_Sender,*PT_Sender;
 
 
 PT_Sender openSender(char *remoteIp,int remotePort,int bindport,int filesize);
-int 	closeSender(PT_Sender sender);
-int 	SenderJoin(PT_Sender sender);
+int     closeSender(PT_Sender sender);
+int     SenderJoin(PT_Sender sender);
 int writeSender(PT_Sender sender,char *cmd,int len);
 
 #endif//_SENDER_H_

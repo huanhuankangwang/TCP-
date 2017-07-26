@@ -8,7 +8,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <sys/ioctl.h>  
+#include <sys/ioctl.h>
 #include <net/if.h>
 
 #include "easy_common.h"
@@ -29,8 +29,7 @@ static char s_aucMsgHead[4] = {0x45, 0x43, 0x45, 0x42};
 
 int send_(int sockfd,char *ip, int port, char *cmd, unsigned short cmd_len);
 
-int easy_ctrl_decompose_frame(char *msg, int msgLen, EasybusAddr *addr, EasybusMsg *pOutdata)
-{
+int easy_ctrl_decompose_frame(char *msg, int msgLen, EasybusAddr *addr, EasybusMsg *pOutdata) {
     char *pcMsgTemp = msg;
     char *pData = NULL;
     EasybusMsg data;
@@ -169,8 +168,7 @@ int easy_ctrl_decompose_frame(char *msg, int msgLen, EasybusAddr *addr, EasybusM
     return 0;
 }
 
-int easy_ctrl_compose_frame(int sockfd,EasybusMsg *data)
-{
+int easy_ctrl_compose_frame(int sockfd,EasybusMsg *data) {
     char *frame, *tmp;
     int contentLen;
     char crcFlag = 1;
@@ -272,41 +270,40 @@ int easy_ctrl_compose_frame(int sockfd,EasybusMsg *data)
 }
 
 
-int easy_receive(int nSocketFd, void *pvBuff, int bufSize)
-{	 int  nRecvLen;
-	int nAddrLen;
-	struct sockaddr_in recvAddr;
-	char acData[1024];
-	int contentLen;
+int easy_receive(int nSocketFd, void *pvBuff, int bufSize) {
+    int  nRecvLen;
+    int nAddrLen;
+    struct sockaddr_in recvAddr;
+    char acData[1024];
+    int contentLen;
 
-	nAddrLen = sizeof(recvAddr);
+    nAddrLen = sizeof(recvAddr);
 
-	do {
-		nRecvLen = recvfrom(nSocketFd, acData, sizeof(acData), 0, (struct sockaddr *)(&recvAddr), &nAddrLen);
+    do {
+        nRecvLen = recvfrom(nSocketFd, acData, sizeof(acData), 0, (struct sockaddr *)(&recvAddr), &nAddrLen);
 
-		if(nRecvLen > 0) {
-			EasybusAddr addr;
-			EasybusMsg data;
+        if(nRecvLen > 0) {
+            EasybusAddr addr;
+            EasybusMsg data;
 
-			memset((void *)&addr, 0, sizeof(addr));
-			strcpy(addr.ip, (char* )inet_ntoa(recvAddr.sin_addr));
-			addr.port = ntohs(recvAddr.sin_port);
+            memset((void *)&addr, 0, sizeof(addr));
+            strcpy(addr.ip, (char* )inet_ntoa(recvAddr.sin_addr));
+            addr.port = ntohs(recvAddr.sin_port);
 
-			memset((void *)&data, 0, sizeof(data));
-			easy_ctrl_decompose_frame(acData, nRecvLen, &addr, &data);
-			contentLen = strlen(data.msgData);
-			memcpy(pvBuff, data.msgData, contentLen < bufSize ? contentLen : bufSize);
-			EB_LOGD(EB_LOG_NORMAL, "recvAddr:%s:%d, data.msgData = %s", addr.ip, addr.port, data.msgData);
-		}
+            memset((void *)&data, 0, sizeof(data));
+            easy_ctrl_decompose_frame(acData, nRecvLen, &addr, &data);
+            contentLen = strlen(data.msgData);
+            memcpy(pvBuff, data.msgData, contentLen < bufSize ? contentLen : bufSize);
+            EB_LOGD(EB_LOG_NORMAL, "recvAddr:%s:%d, data.msgData = %s", addr.ip, addr.port, data.msgData);
+        }
 
-		EB_LOGD(EB_LOG_NORMAL, "nRecvLen = %d contentLen: %d, errno = %d", nRecvLen, contentLen, errno);
-	} while (nRecvLen < 0 && errno == EINTR);
+        EB_LOGD(EB_LOG_NORMAL, "nRecvLen = %d contentLen: %d, errno = %d", nRecvLen, contentLen, errno);
+    } while (nRecvLen < 0 && errno == EINTR);
 
-	return contentLen;
+    return contentLen;
 }
 
-int send_(int sockfd,char *ip, int port, char *cmd, unsigned short cmd_len)
-{
+int send_(int sockfd,char *ip, int port, char *cmd, unsigned short cmd_len) {
     struct sockaddr_in clientAddr;
 
     EB_LOGD(EB_LOG_NORMAL, "start");
@@ -322,7 +319,7 @@ int send_(int sockfd,char *ip, int port, char *cmd, unsigned short cmd_len)
     clientAddr.sin_family = AF_INET;
     clientAddr.sin_addr.s_addr = inet_addr(ip);
     clientAddr.sin_port = htons(port);
-	
+
     if (sendto(sockfd, cmd, cmd_len, 0, (struct clientAddr *) &clientAddr,
                sizeof(clientAddr)) < 0) {
         EB_LOGE("sendto failed, %s", strerror(errno));
@@ -334,33 +331,29 @@ int send_(int sockfd,char *ip, int port, char *cmd, unsigned short cmd_len)
 }
 
 
-int easy_send(int sockfd,char *ip, int port, char *cmd, unsigned short cmd_len)
-{
+int easy_send(int sockfd,char *ip, int port, char *cmd, unsigned short cmd_len) {
     int ret = -1;
     EasybusMsg sendMsg;
 
-    memset(&sendMsg,0,sizeof(sendMsg)); 
+    memset(&sendMsg,0,sizeof(sendMsg));
     strcpy(sendMsg.remoteAddr.ip, ip);
     sendMsg.remoteAddr.port = port;
     strcpy( sendMsg.msgType, "easyheartbeat");
-	strncpy(sendMsg.msgData,cmd,cmd_len);
-    
-    sendMsg.msgData[sizeof(sendMsg.msgData) - 1] = '\0';       
+    strncpy(sendMsg.msgData,cmd,cmd_len);
+
+    sendMsg.msgData[sizeof(sendMsg.msgData) - 1] = '\0';
     sendMsg.msgDataSize = cmd_len;
-    
-    EB_LOGE("ip = %s, port = %d, type = %s,data = %s, len = %d\n", 
-        sendMsg.remoteAddr.ip, sendMsg.remoteAddr.port, sendMsg.msgType, sendMsg.msgData, sendMsg.msgDataSize  );
-	ret = easy_ctrl_compose_frame(sockfd,&sendMsg);
-	if( ret != 0 )
-	{
-      EB_LOGE(" sensor state easybus send error, ret = %d\n", ret);
-	}
-	else
-	{
-	   EB_LOGE(" sensor state easybus send ok, ret = %d\n", ret);
-	}
-	 
-   return ret;
+
+    EB_LOGE("ip = %s, port = %d, type = %s,data = %s, len = %d\n",
+            sendMsg.remoteAddr.ip, sendMsg.remoteAddr.port, sendMsg.msgType, sendMsg.msgData, sendMsg.msgDataSize  );
+    ret = easy_ctrl_compose_frame(sockfd,&sendMsg);
+    if( ret != 0 ) {
+        EB_LOGE(" sensor state easybus send error, ret = %d\n", ret);
+    } else {
+        EB_LOGE(" sensor state easybus send ok, ret = %d\n", ret);
+    }
+
+    return ret;
 
 }
 

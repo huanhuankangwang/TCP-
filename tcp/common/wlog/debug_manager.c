@@ -10,156 +10,134 @@ static int g_iDbgLevelLimit = DEFAULT_DBGLEVEL;
 
 #define   STR(s)      #s
 
-static char  levelDesc[][20] =
-{
+static char  levelDesc[][20] = {
     STR(APP_EMERG  ),
     STR(APP_ALERT  ),
     STR(APP_CRIT   ),
-    STR(APP_ERR	   ),
+    STR(APP_ERR    ),
     STR(APP_WARNING),
     STR(APP_NOTICE ),
     STR(APP_INFO   ),
     STR(APP_DEBUG  ),
 };
 
-int RegisterDebugOpr(PT_DebugOpr ptDebugOpr)
-{
-	PT_DebugOpr ptTmp;
+int RegisterDebugOpr(PT_DebugOpr ptDebugOpr) {
+    PT_DebugOpr ptTmp;
 
-	if (!g_ptDebugOprHead)
-	{
-		g_ptDebugOprHead   = ptDebugOpr;
-		ptDebugOpr->ptNext = NULL;
-	}
-	else
-	{
-		ptTmp = g_ptDebugOprHead;
-		while (ptTmp->ptNext)
-		{
-			ptTmp = ptTmp->ptNext;
-		}
-		ptTmp->ptNext	  = ptDebugOpr;
-		ptDebugOpr->ptNext = NULL;
-	}
+    if (!g_ptDebugOprHead) {
+        g_ptDebugOprHead   = ptDebugOpr;
+        ptDebugOpr->ptNext = NULL;
+    } else {
+        ptTmp = g_ptDebugOprHead;
+        while (ptTmp->ptNext) {
+            ptTmp = ptTmp->ptNext;
+        }
+        ptTmp->ptNext     = ptDebugOpr;
+        ptDebugOpr->ptNext = NULL;
+    }
 
-	return 0;
+    return 0;
 }
 
-void ShowDebugOpr(void)
-{
-	int i = 0;
-	PT_DebugOpr ptTmp = g_ptDebugOprHead;
+void ShowDebugOpr(void) {
+    int i = 0;
+    PT_DebugOpr ptTmp = g_ptDebugOprHead;
 
-	while (ptTmp)
-	{
-		printf("%02d %s\n", i++, ptTmp->name);
-		ptTmp = ptTmp->ptNext;
-	}
+    while (ptTmp) {
+        printf("%02d %s\n", i++, ptTmp->name);
+        ptTmp = ptTmp->ptNext;
+    }
 }
 
-PT_DebugOpr GetDebugOpr(char *pcName)
-{
-	PT_DebugOpr ptTmp = g_ptDebugOprHead;
-	
-	while (ptTmp)
-	{
-		if (strcmp(ptTmp->name, pcName) == 0)
-		{
-			return ptTmp;
-		}
-		ptTmp = ptTmp->ptNext;
-	}
-	return NULL;
+PT_DebugOpr GetDebugOpr(char *pcName) {
+    PT_DebugOpr ptTmp = g_ptDebugOprHead;
+
+    while (ptTmp) {
+        if (strcmp(ptTmp->name, pcName) == 0) {
+            return ptTmp;
+        }
+        ptTmp = ptTmp->ptNext;
+    }
+    return NULL;
 }
 
 
 /* strBuf = "dbglevel=6" */
-int SetDbgLevel(char *strBuf)
-{
-	g_iDbgLevelLimit = strBuf[9] - '0';
-	return 0;
+int SetDbgLevel(char *strBuf) {
+    g_iDbgLevelLimit = strBuf[9] - '0';
+    return 0;
 }
 
 /*
- * stdout=0			   : 关闭stdout打印
- * stdout=1			   : 打开stdout打印
- * netprint=0		   : 关闭netprint打印
- * netprint=1		   : 打开netprint打印
+ * stdout=0            : 关闭stdout打印
+ * stdout=1            : 打开stdout打印
+ * netprint=0          : 关闭netprint打印
+ * netprint=1          : 打开netprint打印
  */
 
-int SetDbgChanel(char *strBuf)
-{
-	char *pStrTmp;
-	char strName[100];
-	PT_DebugOpr ptTmp;
+int SetDbgChanel(char *strBuf) {
+    char *pStrTmp;
+    char strName[100];
+    PT_DebugOpr ptTmp;
 
-	pStrTmp = strchr(strBuf, '=');
-	if (!pStrTmp)
-	{
-		return -1;
-	}
-	else
-	{
-		strncpy(strName, strBuf, pStrTmp-strBuf);
-		strName[pStrTmp-strBuf] = '\0';
-		ptTmp = GetDebugOpr(strName);
-		if (!ptTmp)
-			return -1;
+    pStrTmp = strchr(strBuf, '=');
+    if (!pStrTmp) {
+        return -1;
+    } else {
+        strncpy(strName, strBuf, pStrTmp-strBuf);
+        strName[pStrTmp-strBuf] = '\0';
+        ptTmp = GetDebugOpr(strName);
+        if (!ptTmp)
+            return -1;
 
-		if (pStrTmp[1] == '0')
-			ptTmp->isCanUse = 0;
-		else
-			ptTmp->isCanUse = 1;
-		return 0;
-	}
-	
+        if (pStrTmp[1] == '0')
+            ptTmp->isCanUse = 0;
+        else
+            ptTmp->isCanUse = 1;
+        return 0;
+    }
+
 }
 
 //打印格式 时间 打印级别 TAG [函数名,行号] 打印信息
-int DebugPrint(char *level,char *tag,const char *pcFormat, ...)
-{
-	char strTmpBuf[1000];
+int DebugPrint(char *level,char *tag,const char *pcFormat, ...) {
+    char strTmpBuf[1000];
     char printBuf[1000+100];
-	char *pcTmp;
-	va_list tArg;
-	int iNum;
-	PT_DebugOpr ptTmp = g_ptDebugOprHead;
-	int dbglevel = DEFAULT_DBGLEVEL;
+    char *pcTmp;
+    va_list tArg;
+    int iNum;
+    PT_DebugOpr ptTmp = g_ptDebugOprHead;
+    int dbglevel = DEFAULT_DBGLEVEL;
     struct tm *ptm;
     long ts;
     int y,m,d,h,n,s;
     char timeInfo[48];
 
-    if(level == NULL || tag == NULL)
-    {
+    if(level == NULL || tag == NULL) {
         return -1;
     }
-	
-	/* 根据打印级别决定是否打印 */
-	if ((level[0] == '<') && (level[2] == '>'))
-	{
-		dbglevel = level[1] - '0';
-		if (dbglevel < 0 && dbglevel > 8)
-		{
-			dbglevel = DEFAULT_DBGLEVEL;
-		}
-	}
 
-	if (dbglevel > g_iDbgLevelLimit)
-	{
-		return -1;
-	}
+    /* 根据打印级别决定是否打印 */
+    if ((level[0] == '<') && (level[2] == '>')) {
+        dbglevel = level[1] - '0';
+        if (dbglevel < 0 && dbglevel > 8) {
+            dbglevel = DEFAULT_DBGLEVEL;
+        }
+    }
 
-    if( isExistDebugTag(tag) != 0 && dbglevel >= 4)
-    {
+    if (dbglevel > g_iDbgLevelLimit) {
+        return -1;
+    }
+
+    if( isExistDebugTag(tag) != 0 && dbglevel >= 4) {
         return -1;
     }
 
     va_start (tArg, pcFormat);
-	iNum = vsprintf (strTmpBuf, pcFormat, tArg);
-	va_end (tArg);
-	strTmpBuf[iNum] = '\0';
-    
+    iNum = vsprintf (strTmpBuf, pcFormat, tArg);
+    va_end (tArg);
+    strTmpBuf[iNum] = '\0';
+
     ts = time(NULL);
     ptm = localtime(&ts);
     y   =   ptm-> tm_year+1900;
@@ -172,42 +150,36 @@ int DebugPrint(char *level,char *tag,const char *pcFormat, ...)
     sprintf(printBuf,"[%s] [%s] [%s] %s",timeInfo,levelDesc[dbglevel],tag,strTmpBuf);
     pcTmp = printBuf;
 
-	/* 调用链表中所有isCanUse为1的结构体的DebugPrint函数 */
-	while (ptTmp)
-	{
-		if (ptTmp->isCanUse)
-		{
-			ptTmp->DebugPrint(pcTmp);
-		}
-		ptTmp = ptTmp->ptNext;
-	}
+    /* 调用链表中所有isCanUse为1的结构体的DebugPrint函数 */
+    while (ptTmp) {
+        if (ptTmp->isCanUse) {
+            ptTmp->DebugPrint(pcTmp);
+        }
+        ptTmp = ptTmp->ptNext;
+    }
 
-	return 0;
-	
+    return 0;
+
 }
 
-int DebugInit(void)
-{
-	int iError;
+int DebugInit(void) {
+    int iError;
 
-	iError = StdoutInit();
-	iError |= NetPrintInit();
-	return iError;
+    iError = StdoutInit();
+    iError |= NetPrintInit();
+    return iError;
 }
 
-int InitDebugChanel(void)
-{
-	PT_DebugOpr ptTmp = g_ptDebugOprHead;
-	while (ptTmp)
-	{
-		if (ptTmp->isCanUse && ptTmp->DebugInit)
-		{
-			ptTmp->DebugInit();
-		}
-		ptTmp = ptTmp->ptNext;
-	}
+int InitDebugChanel(void) {
+    PT_DebugOpr ptTmp = g_ptDebugOprHead;
+    while (ptTmp) {
+        if (ptTmp->isCanUse && ptTmp->DebugInit) {
+            ptTmp->DebugInit();
+        }
+        ptTmp = ptTmp->ptNext;
+    }
 
-	return 0;
+    return 0;
 
 }
 

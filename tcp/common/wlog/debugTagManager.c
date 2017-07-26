@@ -110,43 +110,43 @@ static int rmoveDbgIgnoreTag(char *tag)
 
 static int clearAllDebugTag()
 {
-	PT_DebugTag ptTag = NULL,pptTag= NULL;
+    PT_DebugTag ptTag = NULL,pptTag= NULL;
 
-	ptTag  = ptDebugTagHead;
-	if(ptTag)
-	{
-	    ptTag = ptTag->ptNext;
-		ptDebugTagHead = NULL;
-		ptDebugTagHead->ptNext = NULL;
+    ptTag  = ptDebugTagHead;
+    if(ptTag)
+    {
+        ptTag = ptTag->ptNext;
+        ptDebugTagHead = NULL;
+        ptDebugTagHead->ptNext = NULL;
         free(ptDebugTagHead);
-	}
+    }
 
-	while(ptTag)
-	{
-		pptTag = ptTag;
-		ptTag = ptTag->ptNext;
-		pptTag->ptNext = NULL;
-		free(pptTag);
-	}
+    while(ptTag)
+    {
+        pptTag = ptTag;
+        ptTag = ptTag->ptNext;
+        pptTag->ptNext = NULL;
+        free(pptTag);
+    }
 
-	return 0;
+    return 0;
 }
 
 
 static int listAllDebugTag()
 {
-	PT_DebugTag ptTag = NULL ;
+    PT_DebugTag ptTag = NULL ;
 
-	ptTag  = ptDebugTagHead;
+    ptTag  = ptDebugTagHead;
 
-	while(ptTag)
-	{
-		
-		printf("tag: [%s]\r\n",ptTag->tag);
-		ptTag = ptTag->ptNext;
-	}
+    while(ptTag)
+    {
+    
+        printf("tag: [%s]\r\n",ptTag->tag);
+        ptTag = ptTag->ptNext;
+    }
 
-	return 0;
+    return 0;
 }
 
 int isExistDebugTag(char *tag)
@@ -170,76 +170,76 @@ int isExistDebugTag(char *tag)
 
 char *strcpyc(char *dest,char *src,char ch)
 {
-	char *pdest = dest;
-	//DEBUG_TAG("%c",*src);
-	while(*src  && *src != ch){
-		
-		*dest = *src;
-		//DEBUG_TAG("%c",*dest);
-		dest++;
-		src++;
-	}
+    char *pdest = dest;
+    //DEBUG_TAG("%c",*src);
+    while(*src  && *src != ch){
+        
+        *dest = *src;
+        //DEBUG_TAG("%c",*dest);
+        dest++;
+        src++;
+    }
 
-	*dest = '\0';
-	return pdest;
+    *dest = '\0';
+    return pdest;
 }
 
 static char *findChar(char *contain,char ch)
 {
-	char *pc = contain;
-	if(pc == NULL)
-		return NULL;
+    char *pc = contain;
+    if(pc == NULL)
+        return NULL;
 
-	while(*pc)
-	{
-		if(ch == *pc)
-		{
-			return ++pc;
-		}
-		pc++;
-	}
+    while(*pc)
+    {
+        if(ch == *pc)
+        {
+            return ++pc;
+        }
+        pc++;
+    }
 
-	return NULL;
+    return NULL;
 }
 
 
 //logcat -c;logcat -s TAG -s TAG
 int execCmdDebugTag(char *cmd)
 {
-	int ret =0,i = 0;
-	char  *pc = cmd,*pcmd =cmd;
-	
-	char  cmds[20][50] ={0};
-	char  nCmd = 0;
+    int ret =0,i = 0;
+    char  *pc = cmd,*pcmd =cmd;
+        
+    char  cmds[20][50] ={0};
+    char  nCmd = 0;
 
-	char  cmdsting[10][50] ={0};
-	int   cmdtype[10]={0};
-	int   nCmdstring = 0;
+    char  cmdsting[10][50] ={0};
+    int   cmdtype[10]={0};
+    int   nCmdstring = 0;
     int   logcat = 0;
 
-	while(pcmd)
-	{
-	    if(nCmd >= 20)
+    while(pcmd)
+    {
+        if(nCmd >= 20)
         {
             return -1;
         }   
-		pcmd = findChar(pc,' ');
-		strcpyc(cmds[nCmd],pc,' ');
-		DEBUG_TAG("cmds[%d] =%s\r\n",nCmd,cmds[nCmd] );
+        pcmd = findChar(pc,' ');
+        strcpyc(cmds[nCmd],pc,' ');
+        DEBUG_TAG("cmds[%d] =%s\r\n",nCmd,cmds[nCmd] );
         nCmd++;
-		pc = pcmd;
-	}
+        pc = pcmd;
+    }
     
 
-	printf("end**********************\r\n");
+    printf("end**********************\r\n");
 
-	for(i = 0;i< nCmd;i++)
-	{
-	    DEBUG_TAG("cmds[%d] =%s\r\n",i,cmds[i] );
-		if(strcmp(cmds[i],LOGCAT) == 0)
-		{
-		    logcat++;
-		}else
+    for(i = 0;i< nCmd;i++)
+    {
+        DEBUG_TAG("cmds[%d] =%s\r\n",i,cmds[i] );
+        if(strcmp(cmds[i],LOGCAT) == 0)
+        {
+           logcat++;
+        }else
         if(strcmp(cmds[i],CLEAR) == 0 && logcat == 1)
         {
             DEBUG_TAG("cmd Clear\r\n");
@@ -281,29 +281,29 @@ int execCmdDebugTag(char *cmd)
             break;
         }
 
-	}
+    }
 
-	if(ret == 0)
-	{//正确的命令
-		for(i=0;i<nCmdstring;i++)
-		{
-			switch(cmdtype[i])
-			{
-				case 2:
-					clearAllDebugTag();
-					break;
-				case 3:
-					addDbgIgnoreTag(cmdsting[i]);
-					break;
-				case 4:
-					rmoveDbgIgnoreTag(cmdsting[i]);
-					break;
-				default:
-					break;
-			}
-		}	
-	}
-	
+    if(ret == 0)
+    {//正确的命令
+        for(i=0;i<nCmdstring;i++)
+        {
+            switch(cmdtype[i])
+            {
+                case 2:
+                    clearAllDebugTag();
+                    break;
+                case 3:
+                    addDbgIgnoreTag(cmdsting[i]);
+                    break;
+                case 4:
+                    rmoveDbgIgnoreTag(cmdsting[i]);
+                    break;
+                default:
+                    break;
+            }
+        }   
+    }
+
     return ret;
 }
 int test()
@@ -324,28 +324,28 @@ int test()
 #if 0
 int main()
 {
-	char  cmds[1000];
-	
+    char  cmds[1000];
+ 
     //test();
     sprintf(cmds,"%s","logcat -c; logcat -s wangkang -s tangwuke -us tangwuke");
-	if( execCmdDebugTag( cmds ) != 0)
-		printf("exec cmd error:%s \r\n",cmds);
+    if( execCmdDebugTag( cmds ) != 0)
+        printf("exec cmd error:%s \r\n",cmds);
 
     DEBUG_TAG("*************************************************\r\n");
     listAllDebugTag();
     DEBUG_TAG("*************************************************\r\n");
     
     sprintf(cmds,"%s","logcat -s wangkang -s tangwuke -us tangwuke -s kangwang -s Apmservice");
-	if( execCmdDebugTag( cmds ) != 0)
-		printf("exec cmd error:%s \r\n",cmds);
+    if( execCmdDebugTag( cmds ) != 0)
+        printf("exec cmd error:%s \r\n",cmds);
 
     DEBUG_TAG("*************************************************\r\n");
     listAllDebugTag();
     DEBUG_TAG("*************************************************\r\n");
 
     sprintf(cmds,"%s","logcat -s wangkang -s tangwuke -us tangwuke -s kangwang -s Apmservice -s wangTag");
-	if( execCmdDebugTag( cmds ) != 0)
-		printf("exec cmd error:%s \r\n",cmds);
+    if( execCmdDebugTag( cmds ) != 0)
+        printf("exec cmd error:%s \r\n",cmds);
 
     DEBUG_TAG("*************************************************\r\n");
     listAllDebugTag();

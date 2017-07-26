@@ -5,61 +5,52 @@
 #include <pthread.h>
 
 
-MessageRecord* next(MessageRecord *record) 
-{
+MessageRecord* next(MessageRecord *record) {
     return record->fNext;
 }
 
-unsigned cseq(MessageRecord *record) 
-{
+unsigned cseq(MessageRecord *record) {
     return record->fCSeq;
 }
 
-MessageType getMessageType(MessageRecord *record)
-{
+MessageType getMessageType(MessageRecord *record) {
     return record->messageType;
 }
 
-char* contentStr(MessageRecord *record)
-{
+char* contentStr(MessageRecord *record) {
     return record->fContentStr;
 }
 
 
-int free_record(MessageRecord *record)
-{
-	record->fNext = NULL;
-	free(record->fContentStr);
-	free(record);
-	return 0;
+int free_record(MessageRecord *record) {
+    record->fNext = NULL;
+    free(record->fContentStr);
+    free(record);
+    return 0;
 }
 
-MessageRecord* malloc_record(unsigned cseq, MessageType messageType, char const* contentStr,int len)
-{
+MessageRecord* malloc_record(unsigned cseq, MessageType messageType, char const* contentStr,int len) {
     MessageRecord *record = NULL;
-    do
-    {
+    do {
         if(len <= 0 || !contentStr)
             break;
         record = (MessageRecord*)malloc(sizeof(MessageRecord));
-    	if(!record)
-    	{
-    		break;
-    	}
-    	
-    	record->fContentStr = malloc(sizeof(char) * (len + 1));
-    	if(record->fContentStr == NULL)
-    	{
-    		free(record);
-    		record = NULL;
+        if(!record) {
             break;
-    	}
-    	
-    	memcpy(record->fContentStr, contentStr ,len);
-    	record->fCSeq = cseq;
-    	record->messageType = messageType;
-    	record->mLen  = len;
-    }while(0);
-    
-	return record;
+        }
+
+        record->fContentStr = malloc(sizeof(char) * (len + 1));
+        if(record->fContentStr == NULL) {
+            free(record);
+            record = NULL;
+            break;
+        }
+
+        memcpy(record->fContentStr, contentStr,len);
+        record->fCSeq = cseq;
+        record->messageType = messageType;
+        record->mLen  = len;
+    } while(0);
+
+    return record;
 }

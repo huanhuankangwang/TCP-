@@ -13,7 +13,7 @@ typedef struct _MessageQueue
    MessageRecord* fHead;
    MessageRecord* fTail;
    int          mLen;
-}MessageQueue ;
+}MessageQueue;
 
 
 int init_messageQueue(MessageQueue *queue);

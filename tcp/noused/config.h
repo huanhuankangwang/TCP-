@@ -1,7 +1,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#include <sys/types.h>			/* See NOTES */
+#include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
 
 #include <sys/select.h>
@@ -27,14 +27,14 @@
 #include <time.h>
 
 
-#define  SERVER_IP				"192.168.1.100"
-//#define  SERVER_IP				"127.0.0.1"
+#define  SERVER_IP              "192.168.1.100"
+//#define  SERVER_IP                "127.0.0.1"
 
-#define  SERVER_PORT			520
+#define  SERVER_PORT            520
 
-#define  BUFFER_MAX_LEN			(1024*100)
-#define  WRITE_FILE 			"write.png"
-#define  READ_FILE				"read.png"
+#define  BUFFER_MAX_LEN         (1024*100)
+#define  WRITE_FILE             "write.png"
+#define  READ_FILE              "read.png"
 
 //使用接收pool
 #define   USE_SCOKET_MANAGE

@@ -21,8 +21,7 @@
 #define    USING_READER         1
 
 
-static void WidebrightSegvHandler(int signum) 
-{
+static void WidebrightSegvHandler(int signum) {
     void *array[10];
     size_t size;
     char **strings;
@@ -42,36 +41,32 @@ static void WidebrightSegvHandler(int signum)
     exit(1);
 }
 
-int main()
-{
+int main() {
     int ret;
     char  tmp[1024];
     PT_FileReader reader = NULL;
 
-	signal(SIGSEGV, WidebrightSegvHandler); // SIGSEGV      11       Core    Invalid memory reference
+    signal(SIGSEGV, WidebrightSegvHandler); // SIGSEGV      11       Core    Invalid memory reference
     signal(SIGABRT, WidebrightSegvHandler); // SIGABRT       6       Core    Abort signal from
 
-	reader = openFileReader(readfile,BUFFSIZE);
-    if(!reader)
-	{
-		printf("open fileReader err\r\n");
+    reader = openFileReader(readfile,BUFFSIZE);
+    if(!reader) {
+        printf("open fileReader err\r\n");
         return 1;
-	}
+    }
     printf("main  do while\r\n");
-    do{
-       ret = readFileReader(reader,tmp,sizeof(tmp));
-       if(ret <  0)
-       {
-          break;
-       }else if(ret == 0)
-       {
-       	  //printf("no data read\r\n");
-       	  continue;//没有读到数据
-       }
+    do {
+        ret = readFileReader(reader,tmp,sizeof(tmp));
+        if(ret <  0) {
+            break;
+        } else if(ret == 0) {
+            //printf("no data read\r\n");
+            continue;//没有读到数据
+        }
 
-       printf("read len =%d\r\n",ret);
-    }while(1);
-   
+        printf("read len =%d\r\n",ret);
+    } while(1);
+
 quit:
     printf("will quit \r\n");
     closeFileReader(reader);

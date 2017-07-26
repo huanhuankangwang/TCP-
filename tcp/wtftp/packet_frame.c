@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
-#include <sys/types.h>			/* See NOTES */
+#include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
 #include <pthread.h>
 #include <netinet/in.h>
@@ -21,41 +21,38 @@
 static char s_aucMsgHead[4] = {0x45, 0x43, 0x45, 0x42};
 
 
-static int sockReadBlocked(int fd,int timeout)
-{
-	int rc;
-	fd_set fds;
-	static struct timeval out;
-	FD_ZERO(&fds);
-	FD_SET(fd,&fds);
+static int sockReadBlocked(int fd,int timeout) {
+    int rc;
+    fd_set fds;
+    static struct timeval out;
+    FD_ZERO(&fds);
+    FD_SET(fd,&fds);
 
-	out.tv_sec  = timeout / 1000;
-	out.tv_usec = (timeout %1000)*1000;//0.1s
+    out.tv_sec  = timeout / 1000;
+    out.tv_usec = (timeout %1000)*1000;//0.1s
 
-	rc = select(fd+1, &fds, NULL, NULL, &out);
-	if (rc < 0)
-    {   
+    rc = select(fd+1, &fds, NULL, NULL, &out);
+    if (rc < 0) {
         EB_LOGE("socket fd=%s can't read\r\n");//error
-		return -1;
+        return -1;
     }
 
-	return FD_ISSET(fd,&fds) ? 1 : 0;
+    return FD_ISSET(fd,&fds) ? 1 : 0;
 }
 
-int ctrl_compose_frame(BusMsg *data,const char *frame)
-{
+int ctrl_compose_frame(BusMsg *data,const char *frame) {
     char *tmp;
     int contentLen;
     char crcFlag = 1;
     unsigned int crcGen;
     char encryptFlag = 1;
-	int  cseq;
+    int  cseq;
 
     EB_LOGD("start");
 
     if (data == NULL) return -1;
 
-	tmp = frame;
+    tmp = frame;
     if (frame == NULL) {
         return -2;
     }
@@ -73,8 +70,7 @@ int ctrl_compose_frame(BusMsg *data,const char *frame)
     tmp++;
 
     //校验标识
-    if (crcFlag == 1) 
-	{
+    if (crcFlag == 1) {
         tmp[0] = 1;
     }
     tmp++;
@@ -91,7 +87,7 @@ int ctrl_compose_frame(BusMsg *data,const char *frame)
 
     //消息序号
     //todo...
-    
+
     cseq = htonl(data->mCseq);
     memcpy((void *)tmp, (void *)&cseq, 4);
     tmp += 4;
@@ -122,8 +118,7 @@ int ctrl_compose_frame(BusMsg *data,const char *frame)
     tmp += 4;
 
     //加密码
-    if (encryptFlag == 1) 
-	{
+    if (encryptFlag == 1) {
         unsigned int encryptGen;
         char *p, *q;
 
@@ -144,8 +139,7 @@ int ctrl_compose_frame(BusMsg *data,const char *frame)
     return tmp -frame;
 }
 
-int ctrl_decompose_frame(char *msg, int msgLen,BusMsg *pOutdata)
-{
+int ctrl_decompose_frame(char *msg, int msgLen,BusMsg *pOutdata) {
     char *pcMsgTemp = msg;
     char *pData = NULL;
     BusMsg *data;
@@ -155,7 +149,7 @@ int ctrl_decompose_frame(char *msg, int msgLen,BusMsg *pOutdata)
     unsigned int crcRecv;
     char encryptFlag;
 
-	data  = pOutdata;
+    data  = pOutdata;
 
     EB_LOGD( "msgLen: %d", msgLen);
 
@@ -213,7 +207,7 @@ int ctrl_decompose_frame(char *msg, int msgLen,BusMsg *pOutdata)
     //todo...
     memcpy((void *)&msgNum, (void *)pcMsgTemp, 4);
     msgNum = ntohl(msgNum);
-	data->mCseq = msgNum;
+    data->mCseq = msgNum;
     EB_LOGD("msgNum=%d", msgNum);
     pcMsgTemp += 4;
 
@@ -248,8 +242,7 @@ int ctrl_decompose_frame(char *msg, int msgLen,BusMsg *pOutdata)
     pcMsgTemp += 4;
 
     //加密码
-    if (encryptFlag == 1)
-	{
+    if (encryptFlag == 1) {
         unsigned int encryptRecv, encryptGen;
         unsigned int crcTmp;
         char *p, *q;
@@ -270,8 +263,7 @@ int ctrl_decompose_frame(char *msg, int msgLen,BusMsg *pOutdata)
     }
     pcMsgTemp += 4;
 
-    if (pcMsgTemp - msg != msgLen) 
-	{
+    if (pcMsgTemp - msg != msgLen) {
         EB_LOGE("parse error !");
         return -9;
     }
@@ -281,66 +273,59 @@ int ctrl_decompose_frame(char *msg, int msgLen,BusMsg *pOutdata)
     return 0;
 }
 
-int receive_busMsg(int nSocketFd, BusMsg *data,int timeout)
-{	 
-	int  nRecvLen;
-	int nAddrLen;
-	struct sockaddr_in recvAddr;
-	char acData[BUS_FRAME_MIN_LEN+BUS_MSGDATA_MAX_LEN + 1];
-	int contentLen = 0;
-	int ret;
+int receive_busMsg(int nSocketFd, BusMsg *data,int timeout) {
+    int  nRecvLen;
+    int nAddrLen;
+    struct sockaddr_in recvAddr;
+    char acData[BUS_FRAME_MIN_LEN+BUS_MSGDATA_MAX_LEN + 1];
+    int contentLen = 0;
+    int ret;
 
-	nAddrLen = sizeof(recvAddr);
+    nAddrLen = sizeof(recvAddr);
 
-    if(timeout > 0)
-    {
-        if( 1 != sockReadBlocked(nSocketFd,timeout) )
-        {
+    if(timeout > 0) {
+        if( 1 != sockReadBlocked(nSocketFd,timeout) ) {
             EB_LOGE("sockReadBlocked not read\r\n");
             return 0;
         }
     }
-    
-	do {
-		nRecvLen = recvfrom(nSocketFd, acData, (BUS_FRAME_MIN_LEN+BUS_MSGDATA_MAX_LEN) , 0, (struct sockaddr *)(&recvAddr), &nAddrLen);
 
-		if(nRecvLen > 0) {
-			BusAddr addr;
+    do {
+        nRecvLen = recvfrom(nSocketFd, acData, (BUS_FRAME_MIN_LEN+BUS_MSGDATA_MAX_LEN), 0, (struct sockaddr *)(&recvAddr), &nAddrLen);
 
-			memset((void *)&addr, 0, sizeof(addr));
-			//strcpy(addr.ip, (char* )inet_ntoa(recvAddr.sin_addr));
-			addr.port = ntohs(recvAddr.sin_port);
+        if(nRecvLen > 0) {
+            BusAddr addr;
 
-			memset((void *)data, 0, sizeof(BusMsg));
-			ret = ctrl_decompose_frame(acData, nRecvLen, data);
-			if(!ret)
-				contentLen = data->msgDataSize;
+            memset((void *)&addr, 0, sizeof(addr));
+            //strcpy(addr.ip, (char* )inet_ntoa(recvAddr.sin_addr));
+            addr.port = ntohs(recvAddr.sin_port);
+
+            memset((void *)data, 0, sizeof(BusMsg));
+            ret = ctrl_decompose_frame(acData, nRecvLen, data);
+            if(!ret)
+                contentLen = data->msgDataSize;
 
             break;
-		}
-        else if(nRecvLen < 0)
-        {
+        } else if(nRecvLen < 0) {
             if(errno == EINTR)
                 continue;
 
             contentLen = -1;
             break;
         }
-        
-		EB_LOGD("nRecvLen = %d contentLen: %d, errno = %d", nRecvLen, contentLen, errno);
-	} while(1);
 
-	return contentLen;
+        EB_LOGD("nRecvLen = %d contentLen: %d, errno = %d", nRecvLen, contentLen, errno);
+    } while(1);
+
+    return contentLen;
 }
 
-static int send_(int sockfd,char *ip, int port, char *cmd, int cmd_len)
-{
+static int send_(int sockfd,char *ip, int port, char *cmd, int cmd_len) {
     struct sockaddr_in clientAddr;
 
     EB_LOGD("start");
 
-    if (ip == NULL || cmd == NULL) 
-	{
+    if (ip == NULL || cmd == NULL) {
         EB_LOGE("parameter error !");
         return -1;
     }
@@ -351,10 +336,9 @@ static int send_(int sockfd,char *ip, int port, char *cmd, int cmd_len)
     clientAddr.sin_family = AF_INET;
     clientAddr.sin_addr.s_addr = inet_addr(ip);
     clientAddr.sin_port = htons(port);
-	
+
     if (sendto(sockfd, cmd, cmd_len, 0, (struct clientAddr *) &clientAddr,
-               sizeof(clientAddr)) < 0)
-   	{
+               sizeof(clientAddr)) < 0) {
         EB_LOGE("sendto failed, %s\r\n", strerror(errno));
         return -1;
     }
@@ -364,20 +348,16 @@ static int send_(int sockfd,char *ip, int port, char *cmd, int cmd_len)
 }
 
 
-int send_busMsg(int sockfd,BusMsg *msg)
-{
-	int ret;
-	char  frame[BUS_FRAME_MIN_LEN + BUS_MSGDATA_MAX_LEN + 10];
-	ret = ctrl_compose_frame(msg , frame);
-	if( ret <= 0 )
-	{
-      EB_LOGE(" sensor state easybus send error, ret = %d\n", ret);
-	}
-	else
-	{
-	   send_(sockfd,msg->remoteAddr.ip,msg->remoteAddr.port,frame,ret);
-	   //EB_LOGD(" sensor state easybus send ok, ip=%s port=%d ret = %d msg.mCseq =%d \r\n", msg->remoteAddr.ip,msg->remoteAddr.port,ret,msg->mCseq);
-	}
-	return ret;
+int send_busMsg(int sockfd,BusMsg *msg) {
+    int ret;
+    char  frame[BUS_FRAME_MIN_LEN + BUS_MSGDATA_MAX_LEN + 10];
+    ret = ctrl_compose_frame(msg, frame);
+    if( ret <= 0 ) {
+        EB_LOGE(" sensor state easybus send error, ret = %d\n", ret);
+    } else {
+        send_(sockfd,msg->remoteAddr.ip,msg->remoteAddr.port,frame,ret);
+        //EB_LOGD(" sensor state easybus send ok, ip=%s port=%d ret = %d msg.mCseq =%d \r\n", msg->remoteAddr.ip,msg->remoteAddr.port,ret,msg->mCseq);
+    }
+    return ret;
 }
 

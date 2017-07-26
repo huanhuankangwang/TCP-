@@ -5,17 +5,16 @@
 #include <pthread.h>
 
 #pragma pack(4)
-typedef struct _fileWriter
-{
-	PT_RingBuffer  ringbuf;
-	int            fd;//文件句柄
+typedef struct _fileWriter {
+    PT_RingBuffer  ringbuf;
+    int            fd;//文件句柄
 
-	int  		   isRunning;
-	int            flag;//读取操作
-	pthread_mutex_t mutex;
-	pthread_cond_t  cond;
-	pthread_t		pid;
-}T_FileWriter,*PT_FileWriter;
+    int            isRunning;
+    int            flag;//读取操作
+    pthread_mutex_t mutex;
+    pthread_cond_t  cond;
+    pthread_t       pid;
+} T_FileWriter,*PT_FileWriter;
 #pragma pack()
 
 //打开一个文件操作
