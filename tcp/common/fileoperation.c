@@ -5,11 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
-
-
 #include <string.h>
-
-
 #include <fileoperation.h>
 
 #include "config.h"
@@ -43,8 +39,6 @@ int create_file(const char *filename) {
 
     return 0;
 }
-
-
 
 int openfile(const char *filename,int mode) {
     int fd;
