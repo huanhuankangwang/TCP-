@@ -17,80 +17,85 @@ void sig_handler(int signum)
     //exit(0);
     void *p = NULL;
     pthread_t  pid;
-	printf("pthread_exit \r\n");
     pid = pthread_self();
     if(signum == SIGQUIT)
         pthread_exit(p);
-    closeWthreadPrivate(pid);
 }
-
 
 static void *wthread_run(void*arg)
 {
     PT_Wthread_Private wp =(PT_Wthread_Private)arg;
-    if(!wp)
-       return NULL;
+	do{
+	    if(!wp)
+	      break;
 
-    signal(SIGQUIT,sig_handler);
-    printf("run in wthread_run\r\n");
+	    signal(SIGQUIT,sig_handler);
 
-    wp->start(wp->arg);
-    //¹Ø±ÕÏß³Ì
-    memset(wp,0,sizeof(T_Wthread_Private));
+	    wp->start(wp->arg);
+	}while(0);
+	//never do return
+	return NULL;
 }
 
-pthread_t wthread_create(pthread_t *pid,const pthread_attr_t *attr,
-						 PF_Start start, void *arg)
+int wthread_create(WthreadHandle *handle,
+						 PF_WthreadStart start, void *arg)
 {
 	int ret = -1;
     PT_Wthread_Private wp = NULL;
+	
+
 	do{
-        wp = isCanOpen();
+		if(!handle || !arg)
+			break;
+		*handle = (WthreadHandle)NULL;
+		wp = malloc(T_Wthread_Private);
         if(!wp)
         {
-            ret = -1;
             break;
         }
         
         wp->start = start;
         wp->arg   = arg;
-		ret = pthread_create(pid,attr,wthread_run,(void*)wp);
+		ret = pthread_create(&wp->pid,attr,wthread_run,(void*)wp);
 		if(ret < 0)
 		{
+			free(wp);
+			wp = NULL;
 			break;
 		}
-        wp->pid = *pid;
+		ret = 0;
+		*handle = (WthreadHandle)wp;
 	}while(0);
-
-    printf("wthread_create pid=%d\r\n",*(int*)pid);
 	
 	return ret;
 }
 
-int wthread_close(pthread_t pid)
+int wthread_close(WthreadHandle handle)
 {
    int ret = -1;
+   PT_Wthread_Private wp = (PT_Wthread_Private)handle;
    do
    {
-       if(pid < 0)
+       if(!wp)
        {
-         return -1;
+         break;
        }
-
-       if( isExistWthread(pid) != 0)
-            break;
-       pthread_kill(pid,SIGQUIT);
+	   
+       pthread_kill(wp->pid,SIGQUIT);
+	   free(wp);
+	   wp = NULL;
        ret = 0;
    }while(0);
 
-   return 0;
+   return ret;
 }
 
-int wthread_join(pthread_t pid)
+int wthread_join(WthreadHandle handle)
 {
-    if( isExistWthread(pid) == 0)
-        return pthread_join(pid,NULL);
-    
-    return -1;
+	PT_Wthread_Private wp = (PT_Wthread_Private)handle;
+	if(handle == NULL)
+		return -1;
+	
+    return pthread_join(wp->pid,NULL);
 }
 
