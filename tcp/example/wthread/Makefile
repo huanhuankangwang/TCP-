@@ -1,4 +1,4 @@
-WTHREAD_INCLUDE:= -I$(HOME_PATH_INCLUDE)/wthread/
+WTHREAD_INCLUDE:= -I$(LIBS_PAHT_INCLUDE)/wthread/
 
 %.o : %.S
 	$(CC) -g -c $^

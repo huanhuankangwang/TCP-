@@ -5,7 +5,7 @@
 %.o : %.c
 	$(CC) -g $(CFLAGS) $(CFLAGS2) $(LOCAL_CFLASS) -c $^
 
-LOCAL_CFLASS:= -I$(HOME_PATH_INCLUDE)/wtftp/
+LOCAL_CFLASS:= -I$(LIBS_PAHT_INCLUDE)/wtftp/
 
 OBJ:= 
 

@@ -1,12 +1,16 @@
-common:
+EXAMPLE_TARGET:=pwthread pcommon pwtftp
+
+all:$(EXAMPLE_TARGET)
+	@echo "############################################"
+	@echo "#############make all sucess!##############"
+	@echo "############################################"
+pcommon:
 	make -C common
-wtftp:
+pwtftp:
 	make -C wtftp
-wthread:
+pwthread:
 	make -C wthread
 
-all:common wtftp wthread
-	echo make all sucess!
 clean:
 	make clean -C common
 	make clean -C wtftp

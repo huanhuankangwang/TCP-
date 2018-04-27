@@ -47,8 +47,7 @@ int wthread_create(WthreadHandle *handle,
 	do{
 		if(!handle || !arg)
 			break;
-		*handle = (WthreadHandle)NULL;
-		wp = malloc(T_Wthread_Private);
+		wp = malloc(sizeof(T_Wthread_Private));
         if(!wp)
         {
             break;
@@ -56,7 +55,7 @@ int wthread_create(WthreadHandle *handle,
         
         wp->start = start;
         wp->arg   = arg;
-		ret = pthread_create(&wp->pid,attr,wthread_run,(void*)wp);
+		ret = pthread_create(&wp->pid,NULL,wthread_run,(void*)wp);
 		if(ret < 0)
 		{
 			free(wp);
@@ -64,7 +63,7 @@ int wthread_create(WthreadHandle *handle,
 			break;
 		}
 		ret = 0;
-		*handle = (WthreadHandle)wp;
+		*handle = wp;
 	}while(0);
 	
 	return ret;

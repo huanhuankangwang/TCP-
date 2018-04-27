@@ -7,7 +7,7 @@ void *wthread_calback(void*arg)
 	int *status;
 	char buf[30];
 	if(arg == NULL)
-		break;
+		return NULL;
 	status = (int*)arg;
 	while(1)
 	{
@@ -15,6 +15,7 @@ void *wthread_calback(void*arg)
 		if(strcmp("quit",buf) == 0)
 		{
 			*status = 2;
+			break;
 		}
 	}
 	return NULL;
@@ -35,6 +36,7 @@ int main()
 			break;
 		sleep(2);
 	}
+	printf("wthread will be closed");
 	wthread_close(handle);
 	return -1;
 }

@@ -5,13 +5,13 @@
 
 
 typedef void *(*PF_WthreadStart)(void*);
-typedef void 	WthreadHandle;
+typedef void* 	WthreadHandle;
 
 
-int wthread_create(WthreadHandle *pid,
+int wthread_create(WthreadHandle *handle,
 						 PF_WthreadStart start, void *arg);
-int wthread_close(pthread_t pid);
-int wthread_join(pthread_t pid);
+int wthread_close(WthreadHandle handle);
+int wthread_join(WthreadHandle handle);
 
 
 #endif//_WTHREAD_H_

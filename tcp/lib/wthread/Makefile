@@ -1,6 +1,6 @@
-WTHREAD_INCLUDE:= -I$(HOME_PATH_INCLUDE)/wthread/
+WTHREAD_INCLUDE:= -I$(LIBS_PAHT_INCLUDE)/wthread/
 
-OBJS:= wthread.o wthread_private.o
+OBJS:= wthread.o
 %.o : %.S
 	$(CC) -g -c $^
 	

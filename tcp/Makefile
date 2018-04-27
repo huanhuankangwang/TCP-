@@ -1,37 +1,32 @@
 HOME_PATH := $(shell pwd)
+LIBS_PAHT_INCLUDE:= $(HOME_PATH)/lib/include
 HOME_PATH_INCLUDE:= $(HOME_PATH)/include
+
 HOME_PATH_LIBS:=$(HOME_PATH)/lib
 
 CFLAGS  := -lpthread -L$(HOME_PATH_LIBS) -lwthread -lcommon -lwtftp
-CFLAGS2 := -I$(HOME_PATH_INCLUDE) -I$(HOME_PATH_INCLUDE)/common/
+CFLAGS2 := -I$(HOME_PATH_INCLUDE) -I$(LIBS_PAHT_INCLUDE)/common/
 CC:= gcc
 LD:=ld
 
-export CFLAGS CFLAGS2 CC LD HOME_PATH_INCLUDE HOME_PATH_LIBS
+export CFLAGS CFLAGS2 CC LD HOME_PATH_INCLUDE HOME_PATH_LIBS LIBS_PAHT_INCLUDE
 
-LIBS_TARGET:= libwthread.so libcommon.so libwtftp.so
+LIBS_TARGET:= alllibs
 	
-all:clean rm_libs libs
+all:rm_libs libs
 	make -C example
 
 libs:$(LIBS_TARGET)
 
-libwthread.so:
-	make -C wthread
-libcommon.so:
-	make -C common
-
-libwtftp.so:
-	make -C wtftp
+alllibs:
+	make -C lib
 	
 clean:
-	make clean -C common
-	make clean -C wtftp
-	make clean -C wthread
+	make clean -C lib
 	make clean -C example
 
 rm_libs:
-	rm lib/* -rf
+	rm lib/*.so -rf
 	
 testapp:
 	make  -C example
